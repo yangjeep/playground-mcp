@@ -588,6 +588,34 @@ const tools: Tool[] = [
       required: ["platform", "eventType"],
     },
   },
+  {
+    name: "searchspring_code_validator",
+    description: "Validate and troubleshoot Searchspring implementation code",
+    inputSchema: {
+      type: "object",
+      properties: {
+        code: {
+          type: "string",
+          description: "JavaScript/HTML code to validate",
+        },
+        codeType: {
+          type: "string",
+          enum: ["tracking", "search", "autocomplete", "recommendations"],
+          description: "Type of Searchspring implementation being validated",
+        },
+        platform: {
+          type: "string",
+          enum: ["shopify", "bigcommerce", "magento2", "custom", "other"],
+          description: "E-commerce platform (optional)",
+        },
+        issue: {
+          type: "string",
+          description: "Specific issue or error message you're experiencing (optional)",
+        },
+      },
+      required: ["code", "codeType"],
+    },
+  },
 ];
 
 // List available tools
@@ -645,6 +673,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "searchspring_platform_implementation":
         return await searchspringClient.getPlatformImplementation(args as any);
+
+      case "searchspring_code_validator":
+        return await searchspringClient.validateCode(args as any);
 
       default:
         throw new Error(`Unknown tool: ${name}`);
