@@ -1,22 +1,29 @@
-# Searchspring MCP Server
+# Searchspring Integration Assistant (MCP Server)
 
-MCP server for Searchspring API integration to help with customer onboarding and partner/customer led integrations.
+MCP server designed as an integration assistant to help customers implement Searchspring APIs correctly.
 
-This Model Context Protocol (MCP) server provides tools for integrating with Searchspring's e-commerce search and recommendation APIs, making it easier for customers to implement trending, search, autocomplete, suggest, IntelliSuggest, recommendation, and beacon tracking capabilities.
+This Model Context Protocol (MCP) server provides **implementation guidance, code validation, and troubleshooting tools** for Searchspring's e-commerce APIs. Instead of making direct API calls, it serves as an intelligent assistant that helps developers properly implement search, autocomplete, IntelliSuggest tracking, and recommendations in their applications.
 
 ## Features
 
-The server provides MCP tools for all major Searchspring APIs:
+The server provides **integration assistance** for all major Searchspring APIs:
 
-- **Search API**: Full-text product search with filtering, sorting, and pagination
-- **Autocomplete API**: Real-time search query suggestions
-- **Suggest API**: Product discovery suggestions  
-- **IntelliSuggest Tracking**: Event tracking for AI-powered analytics (tracking only)
-- **Recommendations API**: Product recommendations (trending, popular, related, etc.)
-- **Trending API**: Trending products and search terms
-- **Beacon API**: Event tracking for analytics and personalization
-- **Bulk Indexing API**: Bulk product data indexing and management
-- **Finder API**: Advanced product discovery with faceting and filtering
+- **Implementation Guidance**: Step-by-step code examples and API endpoint construction
+- **Platform-Specific Code Generation**: Ready-to-use code for Shopify, Magento, BigCommerce, etc.
+- **Code Validation & Troubleshooting**: Analyze existing implementations and identify issues
+- **Best Practices**: Security, performance, and reliability recommendations
+- **Documentation Links**: Direct links to relevant Searchspring documentation
+
+### Supported API Integrations:
+- **Search API**: Implementation guides for product search with filtering and pagination
+- **Autocomplete API**: Real-time search suggestions implementation patterns
+- **Suggest API**: Spell correction and alternative query suggestions
+- **IntelliSuggest Tracking**: Behavioral event tracking implementation (product views, cart, purchases)
+- **Recommendations API**: Personalized product recommendation integration
+- **Trending API**: Popular search terms and trending content
+- **Beacon API**: Analytics event tracking for recommendations
+- **Bulk Indexing API**: Product data indexing guidance (requires secret key)
+- **Finder API**: Advanced product discovery interfaces
 
 ## Installation
 
@@ -64,9 +71,9 @@ npm run dev
 
 ### Available Tools
 
-#### 1. Search Products (`searchspring_search`)
+#### 1. Search API Implementation (`searchspring_search`)
 
-Search for products with advanced filtering and sorting:
+Get implementation guidance for product search integration:
 
 ```json
 {
@@ -84,16 +91,20 @@ Search for products with advanced filtering and sorting:
 }
 ```
 
-#### 2. Autocomplete (`searchspring_autocomplete`)
+**Returns**: Complete API endpoint URL, required parameters, JavaScript implementation example, and documentation links.
 
-Get real-time search suggestions:
+#### 2. Autocomplete Implementation (`searchspring_autocomplete`)
+
+Get implementation guidance for real-time search suggestions:
 
 ```json
 {
   "query": "runn",
-  "limit": 10
+  "resultsPerPage": 10
 }
 ```
+
+**Returns**: Complete autocomplete implementation with debouncing, error handling, and UI integration examples.
 
 #### 3. Search Suggestions (`searchspring_suggest`)
 
@@ -237,39 +248,30 @@ Get product facets for building product finder interfaces:
 }
 ```
 
-#### 11. Bulk Indexing (`searchspring_bulk_index`)
+#### 12. Code Validation (`searchspring_code_validator`)
 
-Bulk index products into Searchspring:
+**NEW**: Validate and troubleshoot your Searchspring implementation:
 
 ```json
 {
-  "products": [
-    {
-      "id": "prod123",
-      "title": "Running Shoes",
-      "price": 99.99,
-      "brand": "Nike",
-      "category": "shoes"
-    },
-    {
-      "id": "prod456", 
-      "title": "Athletic Shorts",
-      "price": 29.99,
-      "brand": "Adidas",
-      "category": "apparel"
-    }
-  ],
-  "operation": "add",
-  "batchSize": 100,
-  "validateOnly": false
+  "code": "<script>if (typeof ss != 'undefined') { ss.track.product.view({sku: 'ABC123'}); }</script>",
+  "codeType": "tracking",
+  "platform": "shopify",
+  "issue": "Tracking events not appearing in analytics"
 }
 ```
 
-Available operations:
-- `add`: Add new products
-- `update`: Update existing products
-- `delete`: Remove products
-- `replace`: Replace product data entirely
+**Returns**:
+- ✅ Validation results (what's working correctly)
+- ⚠️ Warnings (potential issues)
+- 💡 Suggestions (improvements)
+- 🔧 Troubleshooting (specific issue diagnosis)
+
+Supported code types:
+- `tracking`: IntelliSuggest event tracking validation
+- `search`: Search API implementation validation
+- `autocomplete`: Autocomplete implementation validation
+- `recommendations`: Recommendation integration validation
 
 #### 9. Finder API (`searchspring_finder`)
 

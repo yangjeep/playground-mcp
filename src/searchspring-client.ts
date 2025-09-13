@@ -153,6 +153,13 @@ export interface PlatformImplementationParams {
   quantity?: number;
 }
 
+export interface CodeValidationParams {
+  code: string;
+  codeType: "tracking" | "search" | "autocomplete" | "recommendations";
+  platform?: "shopify" | "bigcommerce" | "magento2" | "custom" | "other";
+  issue?: string;
+}
+
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -300,117 +307,214 @@ export class SearchspringClient {
   }
 
   async search(params: SearchParams) {
-    try {
-      // Generate required IDs if not provided
-      const searchParams = this.buildSearchParams({
-        ...params,
-        userId: params.userId || generateId(),
-        sessionId: params.sessionId || generateId(),
-        pageLoadId: params.pageLoadId || generateId(),
-        domain: params.domain || "https://example.com",
-      });
+    // Build the actual API URL for implementation guidance
+    const searchParams = this.buildSearchParams({
+      ...params,
+      userId: params.userId || "USER_ID_HERE",
+      sessionId: params.sessionId || "SESSION_ID_HERE",
+      pageLoadId: params.pageLoadId || "PAGE_LOAD_ID_HERE",
+      domain: params.domain || "https://your-site.com",
+    });
 
-      const response = await this.searchClient.get(`/api/search/search.json?${searchParams}`);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Search Results${params.query ? ` for "${params.query}"` : ""}:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Search API error: ${this.getErrorMessage(error)}`);
-    }
+    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/search/search.json?${searchParams}`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Searchspring Search API Implementation Guide\n\n` +
+               `API Endpoint: ${apiUrl}\n\n` +
+               `Required Parameters:\n` +
+               `- siteId: ${this.config.siteId}\n` +
+               `- resultsFormat: json\n` +
+               `- userId: Unique user identifier\n` +
+               `- sessionId: Session identifier\n` +
+               `- pageLoadId: Page load identifier\n` +
+               `- domain: Your website domain\n\n` +
+               `Optional Parameters:\n` +
+               `- q: Search query ("${params.query || 'search terms'}")\n` +
+               `- page: Page number (${params.page || 1})\n` +
+               `- resultsPerPage: Results per page (${params.resultsPerPage || 24})\n` +
+               `- filter.{field}: Apply filters\n` +
+               `- sort.{field}: Sort direction (asc/desc)\n\n` +
+               `Example JavaScript Implementation:\n` +
+               `\`\`\`javascript\n` +
+               `fetch('${apiUrl}')\n` +
+               `  .then(response => response.json())\n` +
+               `  .then(data => {\n` +
+               `    // Handle search results\n` +
+               `    console.log(data.results);\n` +
+               `    // Update your UI with results\n` +
+               `  })\n` +
+               `  .catch(error => console.error('Search error:', error));\n` +
+               `\`\`\`\n\n` +
+               `Documentation: https://docs.searchspring.com/api/search/`,
+        },
+      ],
+    };
   }
 
   async autocomplete(params: AutocompleteParams) {
-    try {
-      // Generate required IDs if not provided
-      const searchParams = this.buildSearchParams({
-        ...params,
-        userId: params.userId || generateId(),
-        sessionId: params.sessionId || generateId(),
-        pageLoadId: params.pageLoadId || generateId(),
-        domain: params.domain || "https://example.com",
-      });
+    // Build the actual API URL for implementation guidance
+    const searchParams = this.buildSearchParams({
+      ...params,
+      userId: params.userId || "USER_ID_HERE",
+      sessionId: params.sessionId || "SESSION_ID_HERE",
+      pageLoadId: params.pageLoadId || "PAGE_LOAD_ID_HERE",
+      domain: params.domain || "https://your-site.com",
+    });
 
-      const response = await this.searchClient.get(`/api/search/autocomplete.json?${searchParams}`);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Autocomplete results${params.query ? ` for "${params.query}"` : ""}:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Autocomplete API error: ${this.getErrorMessage(error)}`);
-    }
+    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json?${searchParams}`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Searchspring Autocomplete API Implementation Guide\n\n` +
+               `API Endpoint: ${apiUrl}\n\n` +
+               `Use Case: Real-time search suggestions as user types\n\n` +
+               `Implementation Example:\n` +
+               `\`\`\`javascript\n` +
+               `// Add to your search input field\n` +
+               `const searchInput = document.getElementById('search');\n` +
+               `let debounceTimer;\n\n` +
+               `searchInput.addEventListener('input', function(e) {\n` +
+               `  clearTimeout(debounceTimer);\n` +
+               `  const query = e.target.value;\n` +
+               `  \n` +
+               `  if (query.length >= 2) {\n` +
+               `    debounceTimer = setTimeout(() => {\n` +
+               `      fetchAutocomplete(query);\n` +
+               `    }, 300);\n` +
+               `  }\n` +
+               `});\n\n` +
+               `function fetchAutocomplete(query) {\n` +
+               `  const url = 'https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json';\n` +
+               `  const params = new URLSearchParams({\n` +
+               `    siteId: '${this.config.siteId}',\n` +
+               `    resultsFormat: 'json',\n` +
+               `    q: query,\n` +
+               `    userId: getUserId(),\n` +
+               `    sessionId: getSessionId(),\n` +
+               `    pageLoadId: getPageLoadId(),\n` +
+               `    domain: window.location.origin\n` +
+               `  });\n` +
+               `  \n` +
+               `  fetch(url + '?' + params)\n` +
+               `    .then(response => response.json())\n` +
+               `    .then(data => displaySuggestions(data))\n` +
+               `    .catch(error => console.error('Autocomplete error:', error));\n` +
+               `}\n` +
+               `\`\`\`\n\n` +
+               `Documentation: https://docs.searchspring.com/api/autocomplete/`,
+        },
+      ],
+    };
   }
 
   async suggest(params: SuggestParams) {
-    try {
-      const searchParams = new URLSearchParams({
-        siteId: this.config.siteId,
-      });
+    const searchParams = new URLSearchParams({
+      siteId: this.config.siteId,
+      q: params.query || "search term",
+      language: params.language || "en",
+      suggestionCount: (params.suggestionCount || 4).toString(),
+      productCount: (params.productCount || 20).toString(),
+    });
 
-      if (params.query) {
-        searchParams.append("q", params.query);
-      }
+    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/suggest/query?${searchParams}`;
 
-      if (params.language) {
-        searchParams.append("language", params.language);
-      }
-
-      if (params.suggestionCount) {
-        searchParams.append("suggestionCount", params.suggestionCount.toString());
-      }
-
-      if (params.productCount) {
-        searchParams.append("productCount", params.productCount.toString());
-      }
-
-      const response = await this.searchClient.get(`/api/suggest/query?${searchParams}`);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Suggestions${params.query ? ` for "${params.query}"` : ""}:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Suggest API error: ${this.getErrorMessage(error)}`);
-    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Searchspring Suggest API Implementation Guide\n\n` +
+               `API Endpoint: ${apiUrl}\n\n` +
+               `Use Case: Spell correction and search term suggestions\n\n` +
+               `Key Features:\n` +
+               `- Spell correction for misspelled queries\n` +
+               `- Alternative search term suggestions\n` +
+               `- Language-specific correction models\n\n` +
+               `Implementation Example:\n` +
+               `\`\`\`javascript\n` +
+               `function getSuggestions(query) {\n` +
+               `  const url = 'https://${this.config.siteId}.a.searchspring.io/api/suggest/query';\n` +
+               `  const params = new URLSearchParams({\n` +
+               `    siteId: '${this.config.siteId}',\n` +
+               `    q: query,\n` +
+               `    language: 'en',\n` +
+               `    suggestionCount: '4',\n` +
+               `    productCount: '20'\n` +
+               `  });\n\n` +
+               `  fetch(url + '?' + params)\n` +
+               `    .then(response => response.json())\n` +
+               `    .then(data => {\n` +
+               `      if (data.spellCorrection && data.spellCorrection.corrected) {\n` +
+               `        // Show "Did you mean: {corrected}?"\n` +
+               `        showSpellCorrection(data.spellCorrection.corrected);\n` +
+               `      }\n` +
+               `      \n` +
+               `      if (data.suggestions && data.suggestions.length > 0) {\n` +
+               `        // Show alternative suggestions\n` +
+               `        showSuggestions(data.suggestions);\n` +
+               `      }\n` +
+               `    })\n` +
+               `    .catch(error => console.error('Suggest error:', error));\n` +
+               `}\n` +
+               `\`\`\`\n\n` +
+               `Documentation: https://docs.searchspring.com/api/suggest/`,
+        },
+      ],
+    };
   }
 
   async trending(params: TrendingParams) {
-    try {
-      const searchParams = new URLSearchParams({
-        siteId: this.config.siteId,
-      });
+    const searchParams = new URLSearchParams({
+      siteId: this.config.siteId,
+      limit: (params.limit || 6).toString(),
+    });
 
-      if (params.limit) {
-        searchParams.append("limit", params.limit.toString());
-      }
+    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/suggest/trending?${searchParams}`;
 
-      const response = await this.searchClient.get(`/api/suggest/trending?${searchParams}`);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Trending search terms:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Trending API error: ${this.getErrorMessage(error)}`);
-    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Searchspring Trending API Implementation Guide\n\n` +
+               `API Endpoint: ${apiUrl}\n\n` +
+               `Use Case: Display trending search terms and popular queries\n\n` +
+               `Implementation Example:\n` +
+               `\`\`\`javascript\n` +
+               `function loadTrendingTerms() {\n` +
+               `  const url = 'https://${this.config.siteId}.a.searchspring.io/api/suggest/trending';\n` +
+               `  const params = new URLSearchParams({\n` +
+               `    siteId: '${this.config.siteId}',\n` +
+               `    limit: '${params.limit || 6}'\n` +
+               `  });\n\n` +
+               `  fetch(url + '?' + params)\n` +
+               `    .then(response => response.json())\n` +
+               `    .then(data => {\n` +
+               `      // Display trending terms\n` +
+               `      const trendingContainer = document.getElementById('trending-terms');\n` +
+               `      data.terms.forEach(term => {\n` +
+               `        const link = document.createElement('a');\n` +
+               `        link.href = '/search?q=' + encodeURIComponent(term.query);\n` +
+               `        link.textContent = term.query;\n` +
+               `        trendingContainer.appendChild(link);\n` +
+               `      });\n` +
+               `    })\n` +
+               `    .catch(error => console.error('Trending error:', error));\n` +
+               `}\n\n` +
+               `// Load trending terms on page load\n` +
+               `document.addEventListener('DOMContentLoaded', loadTrendingTerms);\n` +
+               `\`\`\`\n\n` +
+               `Common Use Cases:\n` +
+               `- Homepage trending search suggestions\n` +
+               `- No results page alternative queries\n` +
+               `- Search landing page popular terms\n\n` +
+               `Documentation: https://docs.searchspring.com/api/trending/`,
+        },
+      ],
+    };
   }
 
   async finder(params: FinderParams) {
@@ -862,6 +966,136 @@ if (typeof ss != 'undefined') {
                `- _isuid cookie must be set\n` +
                `- IntelliSuggest script must NOT have defer/async attributes\n` +
                `- SKU values must match Searchspring indexed product SKU core field`,
+        },
+      ],
+    };
+  }
+
+  async validateCode(params: CodeValidationParams) {
+    const { code, codeType, platform, issue } = params;
+
+    const validationResults: string[] = [];
+    const warnings: string[] = [];
+    const suggestions: string[] = [];
+
+    // Common validation checks
+    if (codeType === "tracking") {
+      // Check for IntelliSuggest script inclusion
+      if (!code.includes("cdn.searchspring.net/intellisuggest") && !code.includes("is.min.js")) {
+        validationResults.push("❌ Missing IntelliSuggest script: <script src='//cdn.searchspring.net/intellisuggest/is.min.js'></script>");
+      } else {
+        validationResults.push("✅ IntelliSuggest script inclusion detected");
+      }
+
+      // Check for ss.track usage
+      if (!code.includes("ss.track")) {
+        validationResults.push("❌ No tracking calls found (ss.track.product.view, ss.track.cart.add, ss.track.purchase.buy)");
+      } else {
+        validationResults.push("✅ Tracking calls detected");
+      }
+
+      // Check for typeof ss check
+      if (!code.includes("typeof ss")) {
+        warnings.push("⚠️  Consider adding safety check: if (typeof ss != 'undefined')");
+      }
+
+      // Check for required tracking fields
+      if (code.includes("ss.track.product") && !code.includes("sku")) {
+        validationResults.push("❌ Product tracking missing required 'sku' field");
+      }
+
+      if (code.includes("ss.track.cart") && (!code.includes("sku") || !code.includes("quantity"))) {
+        validationResults.push("❌ Cart tracking missing required 'sku' and/or 'quantity' fields");
+      }
+
+      if (code.includes("ss.track.purchase") && (!code.includes("sku") || !code.includes("quantity"))) {
+        validationResults.push("❌ Purchase tracking missing required 'sku' and/or 'quantity' fields");
+      }
+    }
+
+    if (codeType === "search" || codeType === "autocomplete") {
+      // Check for API endpoint
+      if (!code.includes(".a.searchspring.io")) {
+        validationResults.push("❌ Missing Searchspring API endpoint (should include .a.searchspring.io)");
+      }
+
+      // Check for required parameters
+      if (!code.includes("siteId")) {
+        validationResults.push("❌ Missing required 'siteId' parameter");
+      }
+
+      if (!code.includes("userId") && !code.includes("sessionId")) {
+        warnings.push("⚠️  Missing tracking parameters (userId, sessionId) - these are required for analytics");
+      }
+
+      // Check for error handling
+      if (!code.includes(".catch") && !code.includes("try")) {
+        warnings.push("⚠️  No error handling detected - consider adding .catch() or try/catch");
+      }
+    }
+
+    // Platform-specific checks
+    if (platform === "shopify") {
+      if (codeType === "tracking" && !code.includes("{{")) {
+        warnings.push("⚠️  No Liquid template variables detected - make sure you're using Shopify's template syntax");
+      }
+
+      if (code.includes("product.variants.first.sku") && !code.includes("product.selected_or_first_available_variant.sku")) {
+        suggestions.push("💡 Consider using product.selected_or_first_available_variant.sku for better variant handling");
+      }
+    }
+
+    if (platform === "magento2") {
+      if (codeType === "tracking" && !code.includes("<?=")) {
+        warnings.push("⚠️  No PHP template syntax detected - make sure you're using Magento's .phtml syntax");
+      }
+    }
+
+    // Issue-specific troubleshooting
+    let troubleshooting = "";
+    if (issue) {
+      troubleshooting = `\n\nTroubleshooting for: "${issue}"\n`;
+
+      if (issue.toLowerCase().includes("not working") || issue.toLowerCase().includes("not tracking")) {
+        troubleshooting += `Common causes:\n` +
+                          `- IntelliSuggest script not loaded or blocked by ad blockers\n` +
+                          `- Script placed in wrong location (should be in <head> or before tracking calls)\n` +
+                          `- Missing _isuid cookie (check browser dev tools > Application > Cookies)\n` +
+                          `- SKU values don't match Searchspring indexed product SKU field\n` +
+                          `- Browser console errors preventing script execution\n`;
+      }
+
+      if (issue.toLowerCase().includes("undefined") || issue.toLowerCase().includes("is not defined")) {
+        troubleshooting += `Script loading issue:\n` +
+                          `- Ensure IntelliSuggest script loads before your tracking code\n` +
+                          `- Remove async/defer attributes from the IntelliSuggest script tag\n` +
+                          `- Check browser console for script loading errors\n`;
+      }
+
+      if (issue.toLowerCase().includes("search") || issue.toLowerCase().includes("results")) {
+        troubleshooting += `API integration issues:\n` +
+                          `- Verify siteId is correct: ${this.config.siteId}\n` +
+                          `- Check CORS settings if calling from browser\n` +
+                          `- Ensure all required parameters are included\n` +
+                          `- Check network tab for API response errors\n`;
+      }
+    }
+
+    const summary = `Code Validation Results for ${codeType.toUpperCase()} implementation${platform ? ` on ${platform.toUpperCase()}` : ''}\n\n` +
+                   `${validationResults.join('\n')}\n\n` +
+                   (warnings.length > 0 ? `Warnings:\n${warnings.join('\n')}\n\n` : '') +
+                   (suggestions.length > 0 ? `Suggestions:\n${suggestions.join('\n')}\n\n` : '') +
+                   troubleshooting +
+                   `\nFor additional support:\n` +
+                   `- Documentation: https://docs.searchspring.com/\n` +
+                   `- Support: https://help.searchspring.net/\n` +
+                   `- Implementation guides: https://help.searchspring.net/hc/en-us/sections/201185149`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: summary,
         },
       ],
     };

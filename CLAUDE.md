@@ -4,7 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Model Context Protocol (MCP) server for Searchspring's e-commerce APIs. It provides tools for integrating search, recommendations, autocomplete, tracking, and product indexing capabilities for e-commerce applications.
+**IMPORTANT**: This is a Searchspring Integration Assistant (MCP server) - NOT a direct API proxy.
+
+This MCP server provides **implementation guidance, code validation, and troubleshooting tools** for Searchspring's e-commerce APIs. Instead of making direct API calls, it serves as an intelligent assistant that helps developers properly implement Searchspring integrations.
+
+### What This MCP Does:
+- ✅ Provides implementation guidance and code examples
+- ✅ Validates existing implementation code
+- ✅ Generates platform-specific integration code (Shopify, Magento, etc.)
+- ✅ Troubleshoots common integration issues
+- ✅ Returns proper API endpoint URLs and parameters
+
+### What This MCP Does NOT Do:
+- ❌ Make direct API calls to Searchspring services
+- ❌ Return live search results or product data
+- ❌ Act as a proxy or gateway to Searchspring APIs
 
 ## Essential Commands
 
@@ -49,18 +63,26 @@ Optional environment variables:
 
 ### Available MCP Tools
 
-1. **searchspring_search** - Product search with filtering, sorting, pagination
-2. **searchspring_autocomplete** - Real-time search query suggestions
-3. **searchspring_suggest** - Search term suggestions and spell correction
-4. **searchspring_trending** - Trending search terms
-5. **searchspring_finder** - Facet discovery for product finder interfaces
-6. **searchspring_recommendations** - Personalized product recommendations
-7. **searchspring_beacon_track** - Event tracking for recommendations analytics
-8. **searchspring_intellisuggest_track** - IntelliSuggest behavioral event tracking (product view, cart, sale)
-9. **searchspring_search_result_click** - Implementation guide for search result click tracking
-10. **searchspring_platform_implementation** - Platform-specific IntelliSuggest tracking code generation
-11. **searchspring_bulk_index** - Bulk product data indexing (requires secret key)
-12. **searchspring_bulk_index_status** - Check bulk indexing status (requires secret key)
+**Integration Guidance Tools:**
+1. **searchspring_search** - Search API implementation guidance with endpoint URLs and examples
+2. **searchspring_autocomplete** - Autocomplete implementation patterns with debouncing and error handling
+3. **searchspring_suggest** - Spell correction API implementation guidance
+4. **searchspring_trending** - Trending terms API integration examples
+5. **searchspring_finder** - Facet discovery implementation for product finder UIs
+6. **searchspring_recommendations** - Personalized recommendations integration guidance
+
+**Implementation & Validation Tools:**
+7. **searchspring_platform_implementation** - Platform-specific code generation (Shopify, Magento, etc.)
+8. **searchspring_code_validator** - 🆕 Code validation and troubleshooting for existing implementations
+9. **searchspring_search_result_click** - Click tracking implementation instructions
+
+**Tracking Guidance Tools:**
+10. **searchspring_beacon_track** - Event tracking implementation guidance
+11. **searchspring_intellisuggest_track** - IntelliSuggest behavioral tracking implementation
+
+**Data Management Guidance:**
+12. **searchspring_bulk_index** - Bulk indexing implementation guidance (requires secret key)
+13. **searchspring_bulk_index_status** - Indexing status check implementation
 
 ### Type Safety
 - Strict TypeScript configuration with comprehensive type checking
