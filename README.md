@@ -33,23 +33,14 @@ The server provides MCP tools for all major Searchspring APIs:
 
 ## Configuration
 
-Copy the example environment file and configure your Searchspring credentials:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your Searchspring configuration:
+Configure your Searchspring credentials as environment variables:
 
 ```env
-# Required: Your Searchspring API key
-SEARCHSPRING_API_KEY=your_api_key_here
-
 # Required: Your Searchspring site ID  
 SEARCHSPRING_SITE_ID=your_site_id_here
 
-# Optional: Custom API base URL (defaults to https://api.searchspring.net)
-SEARCHSPRING_BASE_URL=https://api.searchspring.net
+# Optional: Your Searchspring secret key (required only for bulk indexing)
+SEARCHSPRING_SECRET_KEY=your_secret_key_here
 
 # Optional: Request timeout in milliseconds (defaults to 10000)
 SEARCHSPRING_TIMEOUT=10000
@@ -84,9 +75,12 @@ Search for products with advanced filtering and sorting:
   "resultsPerPage": 20,
   "filters": {
     "brand": ["Nike", "Adidas"],
-    "price": "50-200"
+    "color": "blue"
   },
-  "sort": "price_asc"
+  "sort": {
+    "price": "asc",
+    "popularity": "desc"
+  }
 }
 ```
 
@@ -115,47 +109,108 @@ Get product discovery suggestions:
 
 #### 4. IntelliSuggest Tracking (`searchspring_intellisuggest_track`)
 
-Track user interactions for IntelliSuggest analytics:
+Track behavioral events for IntelliSuggest analytics and personalization:
 
 ```json
 {
-  "interaction": "search",
-  "userId": "user123",
-  "sessionId": "session456",
-  "query": "comfortable shoes",
-  "metadata": {
-    "page": "search-results",
-    "source": "autocomplete"
+  "type": "product",
+  "event": {
+    "sku": "ABC123",
+    "name": "Running Shoes",
+    "price": 99.99,
+    "category": "footwear"
   }
 }
 ```
 
-Available interaction types:
-- `search`: Search query performed
-- `click`: User clicked on a result
-- `view`: User viewed a product/result
-- `select`: User selected an option
+Available event types:
+- `product`: Product page view
+- `cart`: Cart addition/view
+- `sale`: Purchase completion
 
-#### 5. Recommendations (`searchspring_recommendations`)
+#### 5. Platform Implementation (`searchspring_platform_implementation`)
 
-Get product recommendations:
+Get platform-specific IntelliSuggest tracking code:
 
 ```json
 {
-  "type": "trending",
-  "categoryId": "shoes",
-  "limit": 10
+  "platform": "shopify",
+  "eventType": "product",
+  "sku": "ABC123",
+  "price": 99.99
 }
 ```
 
-Available recommendation types:
-- `trending`: Currently trending products
-- `popular`: Most popular products
-- `related`: Products related to a specific product
-- `viewed`: Recently viewed products
+Available platforms:
+- `shopify`, `bigcommerce-stencil`, `magento2`, `custom`, etc.
+
+#### 6. Search Result Click Guide (`searchspring_search_result_click`)
+
+Get implementation guide for search result click tracking:
+
+```json
+{
+  "intellisuggestData": "data-from-search-api",
+  "intellisuggestSignature": "signature-from-search-api"
+}
+```
+
+#### 7. Beacon Tracking (`searchspring_beacon_track`)
+
+Track user events for recommendations analytics:
+
+```json
+{
+  "type": "profile.impression",
+  "event": {
+    "profile": {
+      "tag": "similar-products",
+      "placement": "product-page"
+    }
+  },
+  "context": {
+    "website": {
+      "trackingCode": "abc123"
+    },
+    "userId": "user-123",
+    "sessionId": "session-456"
+  }
+}
+```
+
+Available event types:
+- `profile.render`: Profile rendered on page
+- `profile.impression`: Profile viewed by user  
+- `profile.click`: Profile clicked by user
+- `profile.product.render`: Product rendered in profile
+- `profile.product.impression`: Product viewed in profile
+- `profile.product.click`: Product clicked in profile
+
+#### 8. Recommendations (`searchspring_recommendations`)
+
+Get personalized product recommendations:
+
+```json
+{
+  "tags": ["similar-products", "trending"],
+  "products": ["ABC123"],
+  "limits": [5, 10],
+  "shopper": "user123"
+}
+```
+
+Required parameters:
+- `tags`: Array of recommendation profile tags/IDs
+
+Optional parameters:
+- `products`: Product SKUs being viewed (for cross-sell/similar)
+- `limits`: Maximum products per profile
+- `shopper`: Logged-in shopper ID for personalization
+- `cart`: Product SKUs in current cart
+- `lastViewed`: Recently viewed product SKUs
 - `bought_together`: Frequently bought together
 
-#### 6. Trending Data (`searchspring_trending`)
+#### 9. Trending Data (`searchspring_trending`)
 
 Get trending products or search terms:
 
@@ -168,31 +223,21 @@ Get trending products or search terms:
 }
 ```
 
-#### 7. Event Tracking (`searchspring_beacon_track`)
+#### 10. Finder API (`searchspring_finder`)
 
-Track user events for analytics:
+Get product facets for building product finder interfaces:
 
 ```json
 {
-  "event": "view",
-  "userId": "user123",
-  "sessionId": "session456",
-  "productId": "prod789",
-  "metadata": {
-    "page": "product-detail",
-    "source": "search"
-  }
+  "filters": {
+    "color": "blue",
+    "brand": ["Nike", "Adidas"]
+  },
+  "includedFacets": ["color", "size", "brand"]
 }
 ```
 
-Available event types:
-- `view`: Product/page view
-- `click`: Product click
-- `purchase`: Purchase event
-- `add_to_cart`: Add to cart
-- `search`: Search performed
-
-#### 8. Bulk Indexing (`searchspring_bulk_index`)
+#### 11. Bulk Indexing (`searchspring_bulk_index`)
 
 Bulk index products into Searchspring:
 

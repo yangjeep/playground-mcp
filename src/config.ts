@@ -2,9 +2,8 @@ import { z } from "zod";
 
 // Configuration schema using Zod for validation
 const SearchspringConfigSchema = z.object({
-  apiKey: z.string().min(1, "API key is required"),
   siteId: z.string().min(1, "Site ID is required"),
-  baseUrl: z.string().url().optional().default("https://api.searchspring.net"),
+  secretKey: z.string().min(1, "Secret key is required for bulk indexing").optional(),
   timeout: z.number().positive().optional().default(10000),
 });
 
@@ -12,9 +11,8 @@ export type SearchspringConfig = z.infer<typeof SearchspringConfigSchema>;
 
 export function validateConfig(): SearchspringConfig {
   const config = {
-    apiKey: process.env.SEARCHSPRING_API_KEY,
     siteId: process.env.SEARCHSPRING_SITE_ID,
-    baseUrl: process.env.SEARCHSPRING_BASE_URL,
+    secretKey: process.env.SEARCHSPRING_SECRET_KEY,
     timeout: process.env.SEARCHSPRING_TIMEOUT ? parseInt(process.env.SEARCHSPRING_TIMEOUT) : undefined,
   };
 
@@ -26,9 +24,8 @@ export function validateConfig(): SearchspringConfig {
       throw new Error(
         `Invalid Searchspring configuration. Missing or invalid fields: ${missingFields}\n\n` +
         "Please ensure the following environment variables are set:\n" +
-        "- SEARCHSPRING_API_KEY: Your Searchspring API key\n" +
         "- SEARCHSPRING_SITE_ID: Your Searchspring site ID\n" +
-        "- SEARCHSPRING_BASE_URL: (optional) Custom API base URL\n" +
+        "- SEARCHSPRING_SECRET_KEY: (optional) Your Searchspring secret key for bulk indexing\n" +
         "- SEARCHSPRING_TIMEOUT: (optional) Request timeout in milliseconds"
       );
     }
@@ -37,6 +34,5 @@ export function validateConfig(): SearchspringConfig {
 }
 
 export const DEFAULT_CONFIG: Partial<SearchspringConfig> = {
-  baseUrl: "https://api.searchspring.net",
   timeout: 10000,
 };

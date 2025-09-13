@@ -51,43 +51,165 @@ const tools: Tool[] = [
         resultsPerPage: {
           type: "number",
           description: "Number of results per page",
-          default: 20,
+          default: 24,
+        },
+        filters: {
+          type: "object",
+          description: "Search filters as key-value pairs (filter.field=value format)",
+          additionalProperties: true,
+        },
+        bgfilters: {
+          type: "object",
+          description: "Background filters for initial result filtering",
+          additionalProperties: true,
+        },
+        sort: {
+          type: "object",
+          description: "Sort criteria as field-direction pairs (e.g., {price: 'asc', popularity: 'desc'})",
+          additionalProperties: {
+            type: "string",
+            enum: ["asc", "desc"]
+          },
+        },
+        userId: {
+          type: "string",
+          description: "User ID for tracking (auto-generated if not provided)",
+        },
+        sessionId: {
+          type: "string",
+          description: "Session ID for tracking (auto-generated if not provided)",
+        },
+        pageLoadId: {
+          type: "string",
+          description: "Page load ID for tracking (auto-generated if not provided)",
+        },
+        domain: {
+          type: "string",
+          description: "Current page domain (defaults to example.com)",
+        },
+        redirectResponse: {
+          type: "string",
+          enum: ["direct", "minimal", "full"],
+          description: "How to handle redirects in response",
+        },
+        landingPage: {
+          type: "string",
+          description: "Landing page campaign identifier",
+        },
+        tag: {
+          type: "string",
+          description: "Segmented merchandising campaign tag",
+        },
+        includedFacets: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific facets to include in response",
+        },
+        excludedFacets: {
+          type: "array",
+          items: { type: "string" },
+          description: "Facets to exclude from response",
+        },
+        disableInlineBanners: {
+          type: "boolean",
+          description: "Disable inline banners in response",
+        },
+        lastViewed: {
+          type: "array",
+          items: { type: "string" },
+          description: "Recently viewed product SKUs for personalization",
+        },
+        cart: {
+          type: "array",
+          items: { type: "string" },
+          description: "Product SKUs in current cart for personalization",
+        },
+        shopper: {
+          type: "string",
+          description: "Logged-in shopper ID for personalization",
+        },
+      },
+    },
+  },
+  {
+    name: "searchspring_autocomplete",
+    description: "Get autocomplete results using Searchspring Autocomplete API",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Partial search query to get autocomplete for",
+        },
+        resultsPerPage: {
+          type: "number",
+          description: "Number of results per page",
+          default: 24,
+        },
+        page: {
+          type: "number",
+          description: "Page number for pagination",
+          default: 1,
         },
         filters: {
           type: "object",
           description: "Search filters as key-value pairs",
           additionalProperties: true,
         },
+        bgfilters: {
+          type: "object",
+          description: "Background filters for initial result filtering",
+          additionalProperties: true,
+        },
         sort: {
+          type: "object",
+          description: "Sort criteria as field-direction pairs",
+          additionalProperties: {
+            type: "string",
+            enum: ["asc", "desc"]
+          },
+        },
+        userId: {
           type: "string",
-          description: "Sort criteria (e.g., 'price_asc', 'price_desc', 'relevance')",
+          description: "User ID for tracking (auto-generated if not provided)",
+        },
+        sessionId: {
+          type: "string",
+          description: "Session ID for tracking (auto-generated if not provided)",
+        },
+        pageLoadId: {
+          type: "string",
+          description: "Page load ID for tracking (auto-generated if not provided)",
+        },
+        domain: {
+          type: "string",
+          description: "Current page domain (defaults to example.com)",
+        },
+        redirectResponse: {
+          type: "string",
+          enum: ["direct", "minimal", "full"],
+          description: "How to handle redirects in response",
+        },
+        lastViewed: {
+          type: "array",
+          items: { type: "string" },
+          description: "Recently viewed product SKUs for personalization",
+        },
+        cart: {
+          type: "array",
+          items: { type: "string" },
+          description: "Product SKUs in current cart for personalization",
+        },
+        shopper: {
+          type: "string",
+          description: "Logged-in shopper ID for personalization",
         },
       },
-      required: ["query"],
-    },
-  },
-  {
-    name: "searchspring_autocomplete",
-    description: "Get autocomplete suggestions for search queries",
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "Partial search query to get autocomplete suggestions for",
-        },
-        limit: {
-          type: "number",
-          description: "Maximum number of suggestions to return",
-          default: 10,
-        },
-      },
-      required: ["query"],
     },
   },
   {
     name: "searchspring_suggest",
-    description: "Get search suggestions for product discovery",
+    description: "Get search suggestions using Searchspring Suggest API",
     inputSchema: {
       type: "object",
       properties: {
@@ -95,232 +217,375 @@ const tools: Tool[] = [
           type: "string",
           description: "Query string for suggestions",
         },
-        categories: {
-          type: "array",
-          items: { type: "string" },
-          description: "Product categories to filter suggestions",
+        language: {
+          type: "string",
+          description: "Language model for spell corrections",
+          default: "en",
         },
-        limit: {
+        suggestionCount: {
           type: "number",
           description: "Maximum number of suggestions to return",
-          default: 10,
+          default: 4,
         },
-      },
-      required: ["query"],
-    },
-  },
-  {
-    name: "searchspring_intellisuggest_track",
-    description: "Track user interactions for Searchspring IntelliSuggest analytics (tracking only)",
-    inputSchema: {
-      type: "object",
-      properties: {
-        userId: {
-          type: "string",
-          description: "User ID for tracking",
-        },
-        sessionId: {
-          type: "string",
-          description: "Session ID for tracking user behavior",
-        },
-        query: {
-          type: "string",
-          description: "Search query that was performed",
-        },
-        interaction: {
-          type: "string",
-          enum: ["search", "click", "view", "select"],
-          description: "Type of interaction to track",
-        },
-        productId: {
-          type: "string",
-          description: "Product ID (for product-related interactions)",
-        },
-        position: {
+        productCount: {
           type: "number",
-          description: "Position in search results (for click tracking)",
-        },
-        metadata: {
-          type: "object",
-          description: "Additional tracking metadata",
-          additionalProperties: true,
+          description: "Number of products to scan for matches",
+          default: 20,
         },
       },
-      required: ["interaction"],
-    },
-  },
-  {
-    name: "searchspring_recommendations",
-    description: "Get product recommendations based on various strategies",
-    inputSchema: {
-      type: "object",
-      properties: {
-        type: {
-          type: "string",
-          enum: ["trending", "popular", "related", "viewed", "bought_together"],
-          description: "Type of recommendations to retrieve",
-        },
-        productId: {
-          type: "string",
-          description: "Product ID for related/similar product recommendations",
-        },
-        userId: {
-          type: "string",
-          description: "User ID for personalized recommendations",
-        },
-        categoryId: {
-          type: "string",
-          description: "Category ID to filter recommendations",
-        },
-        limit: {
-          type: "number",
-          description: "Maximum number of recommendations to return",
-          default: 10,
-        },
-      },
-      required: ["type"],
     },
   },
   {
     name: "searchspring_trending",
-    description: "Get trending products and search terms",
+    description: "Get trending search terms from Searchspring",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: {
+          type: "number",
+          description: "Maximum number of trending terms to return",
+          default: 6,
+          maximum: 25,
+        },
+      },
+    },
+  },
+  {
+    name: "searchspring_finder",
+    description: "Get facets and filters using Searchspring Finder API (for building product finder interfaces)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filters: {
+          type: "object",
+          description: "Current applied filters",
+          additionalProperties: true,
+        },
+        bgfilters: {
+          type: "object",
+          description: "Background filters",
+          additionalProperties: true,
+        },
+        includedFacets: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific facets to include in response",
+        },
+        excludedFacets: {
+          type: "array",
+          items: { type: "string" },
+          description: "Facets to exclude from response",
+        },
+      },
+    },
+  },
+  {
+    name: "searchspring_recommendations",
+    description: "Get personalized product recommendations",
+    inputSchema: {
+      type: "object",
+      properties: {
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          description: "Profile tags/IDs for recommendation types (required)",
+        },
+        products: {
+          type: "array",
+          items: { type: "string" },
+          description: "Product SKUs being viewed (for cross-sell/similar recommendations)",
+        },
+        blockedItems: {
+          type: "array",
+          items: { type: "string" },
+          description: "Product SKUs to block from recommendations",
+        },
+        categories: {
+          type: "array",
+          items: { type: "string" },
+          description: "Category IDs for category trending recommendations",
+        },
+        brands: {
+          type: "array",
+          items: { type: "string" },
+          description: "Brand names for brand trending recommendations",
+        },
+        shopper: {
+          type: "string",
+          description: "Logged-in shopper ID for personalization",
+        },
+        cart: {
+          type: "array",
+          items: { type: "string" },
+          description: "Product SKUs in current cart",
+        },
+        lastViewed: {
+          type: "array",
+          items: { type: "string" },
+          description: "Recently viewed product SKUs",
+        },
+        limits: {
+          type: "array",
+          items: { type: "number" },
+          description: "Maximum products per profile (in order of tags)",
+        },
+        filters: {
+          type: "object",
+          description: "Filters to apply to recommendations",
+          additionalProperties: true,
+        },
+      },
+      required: ["tags"],
+    },
+  },
+  {
+    name: "searchspring_beacon_track",
+    description: "Track user events using Searchspring Beacon API for recommendations analytics",
     inputSchema: {
       type: "object",
       properties: {
         type: {
           type: "string",
-          enum: ["products", "searches"],
-          description: "Type of trending data to retrieve",
-          default: "products",
+          enum: ["profile.render", "profile.impression", "profile.click", 
+                 "profile.product.render", "profile.product.impression", "profile.product.click"],
+          description: "Type of beacon event to track",
         },
-        timeframe: {
+        category: {
           type: "string",
-          enum: ["hour", "day", "week", "month"],
-          description: "Timeframe for trending data",
-          default: "day",
+          description: "Event category (should be 'searchspring.recommendations.user-interactions')",
+          default: "searchspring.recommendations.user-interactions",
         },
-        categoryId: {
+        id: {
           type: "string",
-          description: "Category ID to filter trending items",
+          description: "Unique event ID (auto-generated if not provided)",
         },
-        limit: {
-          type: "number",
-          description: "Maximum number of trending items to return",
-          default: 20,
+        pid: {
+          type: "string",
+          description: "Parent event ID if this is a child event",
         },
-      },
-    },
-  },
-  {
-    name: "searchspring_beacon_track",
-    description: "Track user events using Searchspring Beacon API for analytics",
-    inputSchema: {
-      type: "object",
-      properties: {
         event: {
-          type: "string",
-          enum: ["view", "click", "purchase", "add_to_cart", "search"],
-          description: "Type of event to track",
-        },
-        userId: {
-          type: "string",
-          description: "User ID for tracking",
-        },
-        sessionId: {
-          type: "string",
-          description: "Session ID for tracking",
-        },
-        productId: {
-          type: "string",
-          description: "Product ID (for product-related events)",
-        },
-        query: {
-          type: "string",
-          description: "Search query (for search events)",
-        },
-        metadata: {
           type: "object",
-          description: "Additional event metadata",
-          additionalProperties: true,
+          description: "Event details object",
+          properties: {
+            profile: {
+              type: "object",
+              description: "Profile data for profile.* events",
+              properties: {
+                tag: { type: "string", description: "Profile tag identifier" },
+                placement: { 
+                  type: "string", 
+                  enum: ["product-page", "home-page", "no-results-page", "confirmation-page", 
+                         "basket-page", "404-page", "user-account-page", "other"],
+                  description: "Profile placement" 
+                },
+                seed: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: { sku: { type: "string" } }
+                  },
+                  description: "Seed products for recommendations"
+                }
+              }
+            },
+            product: {
+              type: "object", 
+              description: "Product data for profile.product.* events",
+              properties: {
+                id: { type: "string", description: "Product SKU/ID" },
+                mappings: {
+                  type: "object",
+                  description: "Product core field mappings"
+                },
+                seed: {
+                  type: "array",
+                  items: {
+                    type: "object", 
+                    properties: { sku: { type: "string" } }
+                  }
+                }
+              }
+            },
+            context: {
+              type: "object",
+              description: "Event context",
+              properties: {
+                type: { type: "string", default: "product-recommendation" },
+                tag: { type: "string" },
+                placement: { type: "string" }
+              }
+            }
+          }
         },
+        context: {
+          type: "object",
+          description: "User context for tracking",
+          properties: {
+            website: {
+              type: "object",
+              properties: {
+                trackingCode: { type: "string", description: "Site ID" }
+              },
+              required: ["trackingCode"]
+            },
+            userId: { type: "string", description: "User ID" },
+            sessionId: { type: "string", description: "Session ID" },
+            pageLoadId: { type: "string", description: "Page load ID" }
+          },
+          required: ["website", "userId", "sessionId"]
+        }
       },
-      required: ["event"],
+      required: ["type", "category", "event", "context"],
     },
   },
   {
     name: "searchspring_bulk_index",
-    description: "Bulk index products into Searchspring for search and recommendations",
+    description: "Trigger bulk indexing of product data (requires SEARCHSPRING_SECRET_KEY)",
     inputSchema: {
       type: "object",
       properties: {
-        products: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "Array of product objects to index",
-        },
-        operation: {
-          type: "string",
-          enum: ["add", "update", "delete", "replace"],
-          description: "Bulk operation type",
-          default: "add",
-        },
-        batchSize: {
+        feedId: {
           type: "number",
-          description: "Number of products to process in each batch",
-          default: 100,
+          description: "Feed ID to index",
         },
-        validateOnly: {
-          type: "boolean",
-          description: "Only validate the data without actually indexing",
-          default: false,
+        requestedBy: {
+          type: "string",
+          description: "Email address for completion notification",
         },
       },
-      required: ["products"],
+      required: ["feedId"],
     },
   },
   {
-    name: "searchspring_finder",
-    description: "Find products using Searchspring Finder API with advanced filtering and faceting",
+    name: "searchspring_bulk_index_status",
+    description: "Get status of bulk indexing operations (requires SEARCHSPRING_SECRET_KEY)",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "searchspring_intellisuggest_track",
+    description: "Track IntelliSuggest behavioral events (product views, cart additions, purchases)",
     inputSchema: {
       type: "object",
       properties: {
-        query: {
+        type: {
           type: "string",
-          description: "Search query string",
+          enum: ["product", "cart", "sale"],
+          description: "Type of IntelliSuggest event to track",
         },
-        filters: {
+        event: {
           type: "object",
-          description: "Advanced filters and facets",
+          description: "Event data object",
+          properties: {
+            sku: {
+              type: "string",
+              description: "Product SKU (must match Searchspring indexed SKU core field)",
+            },
+            price: {
+              type: "number",
+              description: "Product price",
+            },
+            quantity: {
+              type: "number",
+              description: "Product quantity (for cart/sale events)",
+            },
+            category: {
+              type: "string",
+              description: "Product category",
+            },
+            name: {
+              type: "string",
+              description: "Product name",
+            },
+          },
+          required: ["sku"],
           additionalProperties: true,
         },
-        facets: {
-          type: "array",
-          items: { type: "string" },
-          description: "Facet fields to include in response",
-        },
-        sort: {
-          type: "string",
-          description: "Sort criteria",
-        },
-        page: {
-          type: "number",
-          description: "Page number for pagination",
-          default: 1,
-        },
-        resultsPerPage: {
-          type: "number",
-          description: "Number of results per page",
-          default: 20,
-        },
-        includeMetadata: {
-          type: "boolean",
-          description: "Include search metadata in response",
-          default: true,
+        context: {
+          type: "object",
+          description: "Tracking context (auto-generated if not provided)",
+          properties: {
+            website: {
+              type: "object",
+              properties: {
+                trackingCode: {
+                  type: "string",
+                  description: "Site ID for tracking (defaults to configured siteId)",
+                },
+              },
+            },
+            userId: {
+              type: "string",
+              description: "User ID for tracking (auto-generated if not provided)",
+            },
+            sessionId: {
+              type: "string",
+              description: "Session ID for tracking (auto-generated if not provided)",
+            },
+            pageLoadId: {
+              type: "string",
+              description: "Page load ID for tracking (auto-generated if not provided)",
+            },
+          },
         },
       },
+      required: ["type", "event"],
+    },
+  },
+  {
+    name: "searchspring_search_result_click",
+    description: "Get implementation guide for tracking search result clicks (requires IntelliSuggest JavaScript SDK)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        intellisuggestData: {
+          type: "string",
+          description: "IntelliSuggest data from search result (from Search API response)",
+        },
+        intellisuggestSignature: {
+          type: "string", 
+          description: "IntelliSuggest signature from search result (from Search API response)",
+        },
+        note: {
+          type: "string",
+          description: "Optional note about implementation context",
+        },
+      },
+      required: ["intellisuggestData", "intellisuggestSignature"],
+    },
+  },
+  {
+    name: "searchspring_platform_implementation",
+    description: "Get platform-specific implementation code for IntelliSuggest tracking",
+    inputSchema: {
+      type: "object",
+      properties: {
+        platform: {
+          type: "string",
+          enum: ["shopify", "bigcommerce-blueprint", "bigcommerce-stencil", "magento1", "magento2", "miva", "commercev3", "3dcart", "volusion", "custom"],
+          description: "E-commerce platform for implementation",
+        },
+        eventType: {
+          type: "string",
+          enum: ["product", "cart", "sale", "search-click"],
+          description: "Type of tracking event to implement",
+        },
+        sku: {
+          type: "string",
+          description: "Example SKU for code generation (optional)",
+        },
+        price: {
+          type: "number",
+          description: "Example price for code generation (optional)",
+        },
+        quantity: {
+          type: "number",
+          description: "Example quantity for code generation (optional)",
+        },
+      },
+      required: ["platform", "eventType"],
     },
   },
 ];
@@ -345,23 +610,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "searchspring_suggest":
         return await searchspringClient.suggest(args as any);
 
-      case "searchspring_intellisuggest_track":
-        return await searchspringClient.trackIntelliSuggest(args as any);
+      case "searchspring_trending":
+        return await searchspringClient.trending(args as any);
+
+      case "searchspring_finder":
+        return await searchspringClient.finder({
+          resultsPerPage: 0, // Always 0 for finder
+          ...args as any,
+        });
 
       case "searchspring_recommendations":
         return await searchspringClient.recommendations(args as any);
 
-      case "searchspring_trending":
-        return await searchspringClient.trending(args as any);
-
       case "searchspring_beacon_track":
-        return await searchspringClient.trackEvent(args as any);
+        // Generate IDs if not provided
+        const beaconArgs = {
+          category: "searchspring.recommendations.user-interactions",
+          id: Math.random().toString(36).substr(2, 9),
+          ...args as any,
+        };
+        return await searchspringClient.trackEvent(beaconArgs);
 
       case "searchspring_bulk_index":
         return await searchspringClient.bulkIndex(args as any);
 
-      case "searchspring_finder":
-        return await searchspringClient.finder(args as any);
+      case "searchspring_bulk_index_status":
+        return await searchspringClient.getBulkIndexStatus();
+
+      case "searchspring_intellisuggest_track":
+        return await searchspringClient.trackIntelliSuggestEvent(args as any);
+
+      case "searchspring_search_result_click":
+        return await searchspringClient.trackSearchResultClick(args as any);
+
+      case "searchspring_platform_implementation":
+        return await searchspringClient.getPlatformImplementation(args as any);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

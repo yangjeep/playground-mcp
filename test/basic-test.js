@@ -18,16 +18,16 @@ try {
 
 // Test 2: Configuration validation with provided credentials
 console.log("\n2. Testing configuration with mock credentials:");
-process.env.SEARCHSPRING_API_KEY = "test_key";
-process.env.SEARCHSPRING_SITE_ID = "test_site";
+process.env.SEARCHSPRING_SITE_ID = "test123";
 
 try {
   const config = validateConfig();
   console.log("✅ Config validation passed with mock credentials");
-  console.log("   - API Key:", config.apiKey.substring(0, 4) + "...");
   console.log("   - Site ID:", config.siteId);
-  console.log("   - Base URL:", config.baseUrl);
   console.log("   - Timeout:", config.timeout);
+  if (config.secretKey) {
+    console.log("   - Secret Key:", config.secretKey.substring(0, 4) + "...");
+  }
 } catch (error) {
   console.log("❌ Config validation failed:", error.message);
   process.exit(1);
@@ -46,5 +46,5 @@ try {
 
 console.log("\n✅ All tests passed! Server is ready to use.");
 console.log("\nTo use the server, set your actual Searchspring credentials:");
-console.log("- SEARCHSPRING_API_KEY=your_actual_api_key");
 console.log("- SEARCHSPRING_SITE_ID=your_actual_site_id");
+console.log("- SEARCHSPRING_SECRET_KEY=your_secret_key (optional, for bulk indexing)");
