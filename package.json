@@ -1,0 +1,30 @@
+{
+  "name": "searchspring-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Searchspring API integration to help with customer onboarding",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "watch": "tsx watch src/index.ts",
+    "test": "npm run build && node test/basic-test.js"
+  },
+  "keywords": ["mcp", "searchspring", "e-commerce", "search", "api"],
+  "author": "Searchspring MCP Integration",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
