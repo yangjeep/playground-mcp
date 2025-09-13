@@ -108,7 +108,7 @@ const tools: Tool[] = [
         },
         codeType: {
           type: "string",
-          enum: ["tracking", "search", "autocomplete", "recommendations"],
+          enum: ["search", "autocomplete", "suggest", "trending", "recommendations", "finder", "beacon", "bulk-index", "tracking"],
           description: "Type of Searchspring implementation being validated",
         },
         platform: {
