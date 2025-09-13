@@ -110,30 +110,43 @@ const tools: Tool[] = [
     },
   },
   {
-    name: "searchspring_intellisuggest",
-    description: "Get intelligent product suggestions using Searchspring IntelliSuggest",
+    name: "searchspring_intellisuggest_track",
+    description: "Track user interactions for Searchspring IntelliSuggest analytics (tracking only)",
     inputSchema: {
       type: "object",
       properties: {
-        query: {
-          type: "string",
-          description: "Search query for intelligent suggestions",
-        },
         userId: {
           type: "string",
-          description: "User ID for personalized suggestions",
+          description: "User ID for tracking",
         },
         sessionId: {
           type: "string",
           description: "Session ID for tracking user behavior",
         },
-        limit: {
+        query: {
+          type: "string",
+          description: "Search query that was performed",
+        },
+        interaction: {
+          type: "string",
+          enum: ["search", "click", "view", "select"],
+          description: "Type of interaction to track",
+        },
+        productId: {
+          type: "string",
+          description: "Product ID (for product-related interactions)",
+        },
+        position: {
           type: "number",
-          description: "Maximum number of suggestions to return",
-          default: 5,
+          description: "Position in search results (for click tracking)",
+        },
+        metadata: {
+          type: "object",
+          description: "Additional tracking metadata",
+          additionalProperties: true,
         },
       },
-      required: ["query"],
+      required: ["interaction"],
     },
   },
   {
@@ -234,6 +247,82 @@ const tools: Tool[] = [
       required: ["event"],
     },
   },
+  {
+    name: "searchspring_bulk_index",
+    description: "Bulk index products into Searchspring for search and recommendations",
+    inputSchema: {
+      type: "object",
+      properties: {
+        products: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: true,
+          },
+          description: "Array of product objects to index",
+        },
+        operation: {
+          type: "string",
+          enum: ["add", "update", "delete", "replace"],
+          description: "Bulk operation type",
+          default: "add",
+        },
+        batchSize: {
+          type: "number",
+          description: "Number of products to process in each batch",
+          default: 100,
+        },
+        validateOnly: {
+          type: "boolean",
+          description: "Only validate the data without actually indexing",
+          default: false,
+        },
+      },
+      required: ["products"],
+    },
+  },
+  {
+    name: "searchspring_finder",
+    description: "Find products using Searchspring Finder API with advanced filtering and faceting",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Search query string",
+        },
+        filters: {
+          type: "object",
+          description: "Advanced filters and facets",
+          additionalProperties: true,
+        },
+        facets: {
+          type: "array",
+          items: { type: "string" },
+          description: "Facet fields to include in response",
+        },
+        sort: {
+          type: "string",
+          description: "Sort criteria",
+        },
+        page: {
+          type: "number",
+          description: "Page number for pagination",
+          default: 1,
+        },
+        resultsPerPage: {
+          type: "number",
+          description: "Number of results per page",
+          default: 20,
+        },
+        includeMetadata: {
+          type: "boolean",
+          description: "Include search metadata in response",
+          default: true,
+        },
+      },
+    },
+  },
 ];
 
 // List available tools
@@ -256,8 +345,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "searchspring_suggest":
         return await searchspringClient.suggest(args as any);
 
-      case "searchspring_intellisuggest":
-        return await searchspringClient.intelliSuggest(args as any);
+      case "searchspring_intellisuggest_track":
+        return await searchspringClient.trackIntelliSuggest(args as any);
 
       case "searchspring_recommendations":
         return await searchspringClient.recommendations(args as any);
@@ -267,6 +356,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "searchspring_beacon_track":
         return await searchspringClient.trackEvent(args as any);
+
+      case "searchspring_bulk_index":
+        return await searchspringClient.bulkIndex(args as any);
+
+      case "searchspring_finder":
+        return await searchspringClient.finder(args as any);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

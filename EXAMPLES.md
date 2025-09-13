@@ -63,18 +63,22 @@ Get product suggestions for athletic wear:
 }
 ```
 
-### 4. IntelliSuggest
+### 4. IntelliSuggest Tracking
 
-Get AI-powered suggestions with user context:
+Track user interactions for IntelliSuggest analytics:
 
 ```json
 {
-  "tool": "searchspring_intellisuggest",
+  "tool": "searchspring_intellisuggest_track",
   "parameters": {
-    "query": "comfortable walking shoes",
+    "interaction": "search",
     "userId": "user_12345",
     "sessionId": "session_67890",
-    "limit": 5
+    "query": "comfortable walking shoes",
+    "metadata": {
+      "page": "search-results",
+      "source": "autocomplete"
+    }
   }
 }
 ```
@@ -182,6 +186,64 @@ Track a purchase event:
 }
 ```
 
+### 8. Bulk Product Indexing
+
+Index multiple products at once:
+
+```json
+{
+  "tool": "searchspring_bulk_index",
+  "parameters": {
+    "products": [
+      {
+        "id": "SHOE_001",
+        "title": "Air Max Running Shoes",
+        "brand": "Nike",
+        "price": 129.99,
+        "category": "shoes",
+        "in_stock": true,
+        "description": "High-performance running shoes with air cushioning"
+      },
+      {
+        "id": "SHIRT_001", 
+        "title": "Athletic Performance T-Shirt",
+        "brand": "Under Armour",
+        "price": 34.99,
+        "category": "apparel",
+        "in_stock": true,
+        "description": "Moisture-wicking athletic shirt"
+      }
+    ],
+    "operation": "add",
+    "batchSize": 50,
+    "validateOnly": false
+  }
+}
+```
+
+### 9. Advanced Product Discovery (Finder)
+
+Use the Finder API for advanced product discovery with faceting:
+
+```json
+{
+  "tool": "searchspring_finder",
+  "parameters": {
+    "query": "athletic wear",
+    "filters": {
+      "brand": ["Nike", "Adidas"],
+      "price": "25-100",
+      "category": "apparel"
+    },
+    "facets": ["brand", "price", "size", "color"],
+    "sort": "popularity_desc",
+    "page": 1,
+    "resultsPerPage": 20,
+    "includeMetadata": true
+  }
+}
+```
+
 ## Common Use Cases
 
 ### E-commerce Site Search Implementation
@@ -193,14 +255,19 @@ Track a purchase event:
 2. **Product Discovery**:
    - Use `searchspring_suggest` for category-based suggestions
    - Use `searchspring_trending` to show popular items
+   - Use `searchspring_finder` for advanced discovery with faceting
 
-3. **Personalized Recommendations**:
-   - Use `searchspring_intellisuggest` for intelligent suggestions
+3. **Personalized Experience**:
+   - Use `searchspring_intellisuggest_track` for tracking user interactions
    - Use `searchspring_recommendations` with user context
 
 4. **Analytics and Optimization**:
    - Use `searchspring_beacon_track` to track all user interactions
    - Monitor search patterns and product engagement
+
+5. **Product Management**:
+   - Use `searchspring_bulk_index` to manage product catalogs
+   - Bulk update product information and availability
 
 ### Customer Onboarding Flow
 

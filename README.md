@@ -11,10 +11,12 @@ The server provides MCP tools for all major Searchspring APIs:
 - **Search API**: Full-text product search with filtering, sorting, and pagination
 - **Autocomplete API**: Real-time search query suggestions
 - **Suggest API**: Product discovery suggestions  
-- **IntelliSuggest API**: AI-powered intelligent product suggestions
+- **IntelliSuggest Tracking**: Event tracking for AI-powered analytics (tracking only)
 - **Recommendations API**: Product recommendations (trending, popular, related, etc.)
 - **Trending API**: Trending products and search terms
 - **Beacon API**: Event tracking for analytics and personalization
+- **Bulk Indexing API**: Bulk product data indexing and management
+- **Finder API**: Advanced product discovery with faceting and filtering
 
 ## Installation
 
@@ -111,18 +113,28 @@ Get product discovery suggestions:
 }
 ```
 
-#### 4. IntelliSuggest (`searchspring_intellisuggest`)
+#### 4. IntelliSuggest Tracking (`searchspring_intellisuggest_track`)
 
-Get AI-powered intelligent suggestions:
+Track user interactions for IntelliSuggest analytics:
 
 ```json
 {
-  "query": "comfortable shoes",
+  "interaction": "search",
   "userId": "user123",
   "sessionId": "session456",
-  "limit": 5
+  "query": "comfortable shoes",
+  "metadata": {
+    "page": "search-results",
+    "source": "autocomplete"
+  }
 }
 ```
+
+Available interaction types:
+- `search`: Search query performed
+- `click`: User clicked on a result
+- `view`: User viewed a product/result
+- `select`: User selected an option
 
 #### 5. Recommendations (`searchspring_recommendations`)
 
@@ -179,6 +191,60 @@ Available event types:
 - `purchase`: Purchase event
 - `add_to_cart`: Add to cart
 - `search`: Search performed
+
+#### 8. Bulk Indexing (`searchspring_bulk_index`)
+
+Bulk index products into Searchspring:
+
+```json
+{
+  "products": [
+    {
+      "id": "prod123",
+      "title": "Running Shoes",
+      "price": 99.99,
+      "brand": "Nike",
+      "category": "shoes"
+    },
+    {
+      "id": "prod456", 
+      "title": "Athletic Shorts",
+      "price": 29.99,
+      "brand": "Adidas",
+      "category": "apparel"
+    }
+  ],
+  "operation": "add",
+  "batchSize": 100,
+  "validateOnly": false
+}
+```
+
+Available operations:
+- `add`: Add new products
+- `update`: Update existing products
+- `delete`: Remove products
+- `replace`: Replace product data entirely
+
+#### 9. Finder API (`searchspring_finder`)
+
+Advanced product discovery with faceting:
+
+```json
+{
+  "query": "athletic wear",
+  "filters": {
+    "brand": ["Nike", "Adidas"],
+    "price": "25-100",
+    "size": ["M", "L"]
+  },
+  "facets": ["brand", "price", "size", "color"],
+  "sort": "popularity_desc",
+  "page": 1,
+  "resultsPerPage": 20,
+  "includeMetadata": true
+}
+```
 
 ## Integration with MCP Clients
 

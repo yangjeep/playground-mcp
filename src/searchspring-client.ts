@@ -20,11 +20,31 @@ export interface SuggestParams {
   limit?: number;
 }
 
-export interface IntelliSuggestParams {
-  query: string;
+export interface IntelliSuggestTrackParams {
+  interaction: "search" | "click" | "view" | "select";
   userId?: string;
   sessionId?: string;
-  limit?: number;
+  query?: string;
+  productId?: string;
+  position?: number;
+  metadata?: Record<string, any>;
+}
+
+export interface BulkIndexParams {
+  products: Record<string, any>[];
+  operation?: "add" | "update" | "delete" | "replace";
+  batchSize?: number;
+  validateOnly?: boolean;
+}
+
+export interface FinderParams {
+  query?: string;
+  filters?: Record<string, any>;
+  facets?: string[];
+  sort?: string;
+  page?: number;
+  resultsPerPage?: number;
+  includeMetadata?: boolean;
 }
 
 export interface RecommendationParams {
@@ -159,28 +179,32 @@ export class SearchspringClient {
     }
   }
 
-  async intelliSuggest(params: IntelliSuggestParams) {
+  async trackIntelliSuggest(params: IntelliSuggestTrackParams) {
     try {
-      const requestBody = {
-        query: params.query,
+      const eventData = {
+        interaction: params.interaction,
         siteId: this.config.siteId,
-        limit: params.limit || 5,
+        timestamp: new Date().toISOString(),
         ...(params.userId && { userId: params.userId }),
         ...(params.sessionId && { sessionId: params.sessionId }),
+        ...(params.query && { query: params.query }),
+        ...(params.productId && { productId: params.productId }),
+        ...(params.position && { position: params.position }),
+        ...(params.metadata && { metadata: params.metadata }),
       };
 
-      const response = await this.apiClient.post("/api/intellisuggest/query", requestBody);
+      const response = await this.apiClient.post("/api/intellisuggest/track", eventData);
       
       return {
         content: [
           {
             type: "text",
-            text: `IntelliSuggest results for "${params.query}":\n\n${JSON.stringify(response.data, null, 2)}`,
+            text: `IntelliSuggest interaction tracked: ${params.interaction}\n\n${JSON.stringify(response.data, null, 2)}`,
           },
         ],
       };
     } catch (error) {
-      throw new Error(`IntelliSuggest API error: ${this.getErrorMessage(error)}`);
+      throw new Error(`IntelliSuggest tracking error: ${this.getErrorMessage(error)}`);
     }
   }
 
@@ -263,6 +287,85 @@ export class SearchspringClient {
       };
     } catch (error) {
       throw new Error(`Beacon API error: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  async bulkIndex(params: BulkIndexParams) {
+    try {
+      const requestData = {
+        products: params.products,
+        operation: params.operation || "add",
+        siteId: this.config.siteId,
+        batchSize: params.batchSize || 100,
+        validateOnly: params.validateOnly || false,
+        timestamp: new Date().toISOString(),
+      };
+
+      const response = await this.apiClient.post("/api/feed/bulk", requestData);
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Bulk indexing ${params.operation || "add"} operation completed for ${params.products.length} products:\n\n${JSON.stringify(response.data, null, 2)}`,
+          },
+        ],
+      };
+    } catch (error) {
+      throw new Error(`Bulk indexing error: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  async finder(params: FinderParams) {
+    try {
+      const searchParams = new URLSearchParams({
+        siteId: this.config.siteId,
+        page: (params.page || 1).toString(),
+        resultsPerPage: (params.resultsPerPage || 20).toString(),
+      });
+
+      if (params.query) {
+        searchParams.append("q", params.query);
+      }
+
+      if (params.sort) {
+        searchParams.append("sort", params.sort);
+      }
+
+      if (params.includeMetadata !== false) {
+        searchParams.append("includeMetadata", "true");
+      }
+
+      // Add filters
+      if (params.filters) {
+        Object.entries(params.filters).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            value.forEach(v => searchParams.append(`filter.${key}`, v));
+          } else {
+            searchParams.append(`filter.${key}`, value);
+          }
+        });
+      }
+
+      // Add facets
+      if (params.facets) {
+        params.facets.forEach(facet => {
+          searchParams.append("facet", facet);
+        });
+      }
+
+      const response = await this.apiClient.get(`/api/finder/search?${searchParams}`);
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Finder API results${params.query ? ` for "${params.query}"` : ""}:\n\n${JSON.stringify(response.data, null, 2)}`,
+          },
+        ],
+      };
+    } catch (error) {
+      throw new Error(`Finder API error: ${this.getErrorMessage(error)}`);
     }
   }
 
