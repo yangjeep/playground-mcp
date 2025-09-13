@@ -1,102 +1,144 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Project guidance for Claude Code when working with the Searchspring Integration Assistant MCP Server.
 
 ## Project Overview
 
-**IMPORTANT**: This is a Searchspring Integration Assistant (MCP server) - NOT a direct API proxy.
-
-This MCP server provides **implementation guidance, code validation, and troubleshooting tools** for Searchspring's e-commerce APIs. Instead of making direct API calls, it serves as an intelligent assistant that helps developers properly implement Searchspring integrations.
+**CRITICAL**: This is a Searchspring Integration Assistant - NOT an API proxy.
 
 ### What This MCP Does:
-- ✅ Provides implementation guidance and code examples
-- ✅ Validates existing implementation code
-- ✅ Generates platform-specific integration code (Shopify, Magento, etc.)
-- ✅ Troubleshoots common integration issues
-- ✅ Returns proper API endpoint URLs and parameters
+✅ **Implementation Guidance** - Returns step-by-step integration instructions
+✅ **Code Validation** - Analyzes existing code for issues and improvements
+✅ **Platform-Specific Code** - Generates ready-to-use tracking code for Shopify, Magento, etc.
+✅ **Troubleshooting** - Diagnoses common integration problems
+✅ **Documentation Links** - Provides relevant Searchspring documentation
 
 ### What This MCP Does NOT Do:
-- ❌ Make direct API calls to Searchspring services
-- ❌ Return live search results or product data
-- ❌ Act as a proxy or gateway to Searchspring APIs
+❌ **Make API Calls** - Does not contact Searchspring APIs directly
+❌ **Return Live Data** - Does not provide real search results or product data
+❌ **Act as Proxy** - Does not forward requests to Searchspring services
 
 ## Essential Commands
 
 ### Build and Development
-- `npm run build` - Compile TypeScript to JavaScript in dist/
-- `npm run dev` - Run development server with auto-reload using tsx
-- `npm run watch` - Watch mode for development
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run dev` - Development server with auto-reload
 - `npm start` - Start the built MCP server
-- `npm test` - Run the basic validation test suite
+- `npm test` - Run validation tests
 
 ### Environment Setup
-Required environment variables:
-- `SEARCHSPRING_SITE_ID` - Your Searchspring site ID
+**Required**: `SEARCHSPRING_SITE_ID` - Your Searchspring site identifier
+**Optional**: `SEARCHSPRING_SECRET_KEY` - Only needed for bulk indexing tools
+**Optional**: `SEARCHSPRING_TIMEOUT` - Request timeout in milliseconds
 
-Optional environment variables:
-- `SEARCHSPRING_SECRET_KEY` - Your Searchspring secret key (required only for bulk indexing)
-- `SEARCHSPRING_TIMEOUT` - Request timeout in milliseconds (defaults to 10000)
+## Available MCP Tools
+
+### Implementation Guidance Tools
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `searchspring_search` | Search API guidance | Query + filters + sort | Complete API URL + JS implementation |
+| `searchspring_autocomplete` | Autocomplete guidance | Partial query | Debounced implementation + UI patterns |
+| `searchspring_suggest` | Spell correction guidance | Query + language | Correction API + "Did you mean?" UI |
+| `searchspring_trending` | Trending terms guidance | Limit | Trending API + homepage integration |
+| `searchspring_recommendations` | Recommendation guidance | Tags + context | Recommendation API + examples |
+| `searchspring_finder` | Faceted search guidance | Filters + facets | Finder API + dynamic filtering |
+
+### Code Generation Tools
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `searchspring_platform_implementation` | Platform-specific code | Platform + event type + data | Ready-to-use tracking code |
+| `searchspring_search_result_click` | Click tracking guidance | IntelliSuggest data | JavaScript SDK instructions |
+
+**Supported Platforms**: Shopify, BigCommerce, Magento 1/2, Miva, Commerce v3, 3DCart, Volusion, Custom
+
+### Validation & Troubleshooting Tools
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `searchspring_code_validator` | Code analysis | Code + type + platform + issue | ✅ Validation, ⚠️ warnings, 💡 suggestions, 🔧 troubleshooting |
+| `searchspring_intellisuggest_track` | Tracking guidance | Event type + product data | Implementation guidance + context |
+| `searchspring_beacon_track` | Analytics guidance | Event + context | Beacon implementation guidance |
+
+### Data Management Tools
+| Tool | Purpose | Input | Output |
+|------|---------|-------|--------|
+| `searchspring_bulk_index` | Indexing guidance | Feed ID + options | Bulk API implementation guidance |
+| `searchspring_bulk_index_status` | Status check guidance | None | Status API implementation |
 
 ## Architecture
 
 ### Core Components
 
 **Main Server (`src/index.ts`)**
-- MCP server setup using @modelcontextprotocol/sdk
-- Tool definitions for 9 Searchspring APIs
-- Request routing and error handling
-- Server runs on stdio transport
+- MCP server setup and tool definitions
+- Request routing to client methods
+- Error handling and response formatting
 
-**API Client (`src/searchspring-client.ts`)**
-- SearchspringClient class handles all API interactions
-- Multiple Axios instances for different API endpoints:
-  - Main search API: `https://{siteId}.a.searchspring.io`
-  - Beacon tracking: `https://beacon.searchspring.io`
-  - Bulk indexing: `https://index-api.searchspring.net`
-- Automatic ID generation for required tracking parameters
-- Comprehensive parameter interfaces for type safety
+**Integration Assistant (`src/searchspring-client.ts`)**
+- SearchspringClient class with guidance methods
+- Parameter validation and URL construction
+- Code validation and troubleshooting logic
+- Platform-specific implementation templates
 
 **Configuration (`src/config.ts`)**
-- Zod schema validation for environment variables
-- Configuration validation with helpful error messages
+- Environment variable validation
 - Default values and optional parameters
 
-### Available MCP Tools
+## Key Implementation Notes
 
-**Integration Guidance Tools:**
-1. **searchspring_search** - Search API implementation guidance with endpoint URLs and examples
-2. **searchspring_autocomplete** - Autocomplete implementation patterns with debouncing and error handling
-3. **searchspring_suggest** - Spell correction API implementation guidance
-4. **searchspring_trending** - Trending terms API integration examples
-5. **searchspring_finder** - Facet discovery implementation for product finder UIs
-6. **searchspring_recommendations** - Personalized recommendations integration guidance
+### Tool Behavior
+- **All tools return implementation guidance**, not live API data
+- **Search tools** provide complete API URLs with parameters
+- **Platform tools** generate ready-to-use tracking code
+- **Validation tools** analyze code for issues and improvements
+- **All tools** include documentation links and best practices
 
-**Implementation & Validation Tools:**
-7. **searchspring_platform_implementation** - Platform-specific code generation (Shopify, Magento, etc.)
-8. **searchspring_code_validator** - 🆕 Code validation and troubleshooting for existing implementations
-9. **searchspring_search_result_click** - Click tracking implementation instructions
+### Code Validation Features
+- **Script inclusion checks** - Ensures IntelliSuggest script is present
+- **Safety validation** - Checks for proper `typeof ss` guards
+- **Required field validation** - Ensures SKU, quantity, etc. are included
+- **Platform-specific warnings** - Shopify Liquid, Magento PHP syntax checks
+- **Issue-specific troubleshooting** - Targeted help for common problems
 
-**Tracking Guidance Tools:**
-10. **searchspring_beacon_track** - Event tracking implementation guidance
-11. **searchspring_intellisuggest_track** - IntelliSuggest behavioral tracking implementation
+### Response Format
+All tools return:
+```typescript
+{
+  content: [{
+    type: "text",
+    text: "Implementation guidance with:\n- API endpoints\n- Code examples\n- Best practices\n- Documentation links"
+  }]
+}
+```
 
-**Data Management Guidance:**
-12. **searchspring_bulk_index** - Bulk indexing implementation guidance (requires secret key)
-13. **searchspring_bulk_index_status** - Indexing status check implementation
+## Usage Patterns
 
-### Type Safety
-- Strict TypeScript configuration with comprehensive type checking
-- Interface definitions for all API parameters
-- Zod validation for configuration
-- ESNext modules with bundler resolution
+### For Customer Onboarding
+1. Use search/autocomplete tools to understand API structure
+2. Use platform implementation tools for tracking code
+3. Use code validator to ensure correctness
+4. Use troubleshooting for issue resolution
 
-### Testing
-- Basic validation test in `test/basic-test.js`
-- Tests configuration validation and client instantiation
-- Requires build step before testing
+### For Code Review
+1. Use code validator with existing implementation
+2. Review warnings and suggestions
+3. Compare with platform-specific tool output
+4. Follow documentation links for details
 
-## Documentation Structure
+### For Troubleshooting
+1. Use code validator with specific issue parameter
+2. Get targeted troubleshooting guidance
+3. Validate fixes with code validator
+4. Test with generated API URLs
 
-- **README.md** - Comprehensive usage documentation and API examples
-- **EXAMPLES.md** - Detailed tool usage examples and common patterns
-- **docs.searchspring.com/** - Extensive Searchspring API documentation
+## Testing
+
+**Unit Tests**: `npm test` runs validation tests
+**MCP Integration**: Configure with Claude Desktop or other MCP clients for interactive testing
+
+## Important Reminders
+
+1. **This is NOT an API proxy** - Always provide implementation guidance, never make live API calls
+2. **Focus on integration assistance** - Help developers implement Searchspring correctly
+3. **Provide complete examples** - Include error handling, best practices, and documentation
+4. **Platform-specific guidance** - Tailor responses to user's platform when specified
+5. **Validation is key** - Always validate implementations and provide improvement suggestions

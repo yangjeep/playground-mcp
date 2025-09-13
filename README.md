@@ -1,312 +1,135 @@
-# Searchspring Integration Assistant (MCP Server)
+# Searchspring Integration Assistant
 
-MCP server designed as an integration assistant to help customers implement Searchspring APIs correctly.
+A Model Context Protocol (MCP) server that provides **implementation guidance, code validation, and troubleshooting** for Searchspring's e-commerce APIs.
 
-This Model Context Protocol (MCP) server provides **implementation guidance, code validation, and troubleshooting tools** for Searchspring's e-commerce APIs. Instead of making direct API calls, it serves as an intelligent assistant that helps developers properly implement search, autocomplete, IntelliSuggest tracking, and recommendations in their applications.
+> **Important**: This is an integration assistant, not an API proxy. It returns implementation guidance and code examples rather than live API data.
 
-## Features
+## Quick Start
 
-The server provides **integration assistance** for all major Searchspring APIs:
-
-- **Implementation Guidance**: Step-by-step code examples and API endpoint construction
-- **Platform-Specific Code Generation**: Ready-to-use code for Shopify, Magento, BigCommerce, etc.
-- **Code Validation & Troubleshooting**: Analyze existing implementations and identify issues
-- **Best Practices**: Security, performance, and reliability recommendations
-- **Documentation Links**: Direct links to relevant Searchspring documentation
-
-### Supported API Integrations:
-- **Search API**: Implementation guides for product search with filtering and pagination
-- **Autocomplete API**: Real-time search suggestions implementation patterns
-- **Suggest API**: Spell correction and alternative query suggestions
-- **IntelliSuggest Tracking**: Behavioral event tracking implementation (product views, cart, purchases)
-- **Recommendations API**: Personalized product recommendation integration
-- **Trending API**: Popular search terms and trending content
-- **Beacon API**: Analytics event tracking for recommendations
-- **Bulk Indexing API**: Product data indexing guidance (requires secret key)
-- **Finder API**: Advanced product discovery interfaces
-
-## Installation
-
-1. Clone this repository
-2. Install dependencies:
+1. **Install dependencies**:
    ```bash
    npm install
-   ```
-
-3. Build the project:
-   ```bash
    npm run build
    ```
 
-## Configuration
+2. **Configure environment**:
+   ```bash
+   export SEARCHSPRING_SITE_ID="your_site_id_here"
+   # Optional: export SEARCHSPRING_SECRET_KEY="your_secret_key" (for bulk indexing only)
+   ```
 
-Configure your Searchspring credentials as environment variables:
+3. **Start the server**:
+   ```bash
+   npm start
+   ```
 
-```env
-# Required: Your Searchspring site ID  
-SEARCHSPRING_SITE_ID=your_site_id_here
+## What This MCP Does
 
-# Optional: Your Searchspring secret key (required only for bulk indexing)
-SEARCHSPRING_SECRET_KEY=your_secret_key_here
+✅ **Implementation Guidance** - Step-by-step API integration instructions
+✅ **Code Validation** - Analyze existing implementations for issues
+✅ **Platform-Specific Code** - Generate Shopify, Magento, etc. tracking code
+✅ **Troubleshooting** - Diagnose common integration problems
+✅ **Documentation Links** - Direct links to relevant Searchspring docs
 
-# Optional: Request timeout in milliseconds (defaults to 10000)
-SEARCHSPRING_TIMEOUT=10000
-```
+❌ **Not an API Proxy** - Does not make live API calls or return product data
 
-## Usage
+## Available Tools
 
-### Running the Server
+### Implementation Guidance Tools
 
-Start the MCP server:
+| Tool | Input | Output |
+|------|-------|--------|
+| `searchspring_search` | Search parameters (query, filters, sort) | Complete API endpoint URL + JavaScript implementation example |
+| `searchspring_autocomplete` | Query string + options | Debounced autocomplete implementation with error handling |
+| `searchspring_suggest` | Query string + language | Spell correction API implementation + "Did you mean?" patterns |
+| `searchspring_trending` | Limit (default: 6) | Trending terms API implementation + UI integration examples |
+| `searchspring_recommendations` | Tags + personalization data | Recommendation API endpoint + implementation guidance |
 
-```bash
-npm start
-```
+### Code Generation Tools
 
-For development with auto-reload:
+| Tool | Input | Output |
+|------|-------|--------|
+| `searchspring_platform_implementation` | Platform + event type + sample data | Ready-to-use tracking code for specific platforms |
+| `searchspring_search_result_click` | IntelliSuggest data + signature | JavaScript SDK implementation instructions |
 
-```bash
-npm run dev
-```
+**Supported Platforms**: Shopify, BigCommerce, Magento 1/2, Miva, Commerce v3, 3DCart, Volusion, Custom
 
-### Available Tools
+### Validation & Troubleshooting Tools
 
-#### 1. Search API Implementation (`searchspring_search`)
+| Tool | Input | Output |
+|------|-------|--------|
+| `searchspring_code_validator` | Code + type + platform + issue (optional) | ✅ Validation results, ⚠️ warnings, 💡 suggestions, 🔧 troubleshooting |
+| `searchspring_intellisuggest_track` | Event type + product data | Tracking implementation guidance |
+| `searchspring_beacon_track` | Event data + context | Analytics tracking implementation |
 
-Get implementation guidance for product search integration:
+### Data Management Tools
 
+| Tool | Input | Output |
+|------|-------|--------|
+| `searchspring_bulk_index` | Feed ID + options | Bulk indexing API implementation guidance |
+| `searchspring_bulk_index_status` | None | Status check API implementation guidance |
+| `searchspring_finder` | Filters + facets | Product finder API implementation with faceting |
+
+## Example Usage
+
+### Get Search Implementation
 ```json
-{
-  "query": "running shoes",
-  "page": 1,
-  "resultsPerPage": 20,
-  "filters": {
-    "brand": ["Nike", "Adidas"],
-    "color": "blue"
-  },
-  "sort": {
-    "price": "asc",
-    "popularity": "desc"
-  }
-}
+Input: {"query": "shoes", "filters": {"brand": ["Nike"]}}
+Output: Complete API URL + fetch() implementation + error handling
 ```
 
-**Returns**: Complete API endpoint URL, required parameters, JavaScript implementation example, and documentation links.
-
-#### 2. Autocomplete Implementation (`searchspring_autocomplete`)
-
-Get implementation guidance for real-time search suggestions:
-
+### Validate Tracking Code
 ```json
-{
-  "query": "runn",
-  "resultsPerPage": 10
-}
-```
-
-**Returns**: Complete autocomplete implementation with debouncing, error handling, and UI integration examples.
-
-#### 3. Search Suggestions (`searchspring_suggest`)
-
-Get product discovery suggestions:
-
-```json
-{
-  "query": "athletic wear",
-  "categories": ["shoes", "apparel"],
-  "limit": 10
-}
-```
-
-#### 4. IntelliSuggest Tracking (`searchspring_intellisuggest_track`)
-
-Track behavioral events for IntelliSuggest analytics and personalization:
-
-```json
-{
-  "type": "product",
-  "event": {
-    "sku": "ABC123",
-    "name": "Running Shoes",
-    "price": 99.99,
-    "category": "footwear"
-  }
-}
-```
-
-Available event types:
-- `product`: Product page view
-- `cart`: Cart addition/view
-- `sale`: Purchase completion
-
-#### 5. Platform Implementation (`searchspring_platform_implementation`)
-
-Get platform-specific IntelliSuggest tracking code:
-
-```json
-{
-  "platform": "shopify",
-  "eventType": "product",
-  "sku": "ABC123",
-  "price": 99.99
-}
-```
-
-Available platforms:
-- `shopify`, `bigcommerce-stencil`, `magento2`, `custom`, etc.
-
-#### 6. Search Result Click Guide (`searchspring_search_result_click`)
-
-Get implementation guide for search result click tracking:
-
-```json
-{
-  "intellisuggestData": "data-from-search-api",
-  "intellisuggestSignature": "signature-from-search-api"
-}
-```
-
-#### 7. Beacon Tracking (`searchspring_beacon_track`)
-
-Track user events for recommendations analytics:
-
-```json
-{
-  "type": "profile.impression",
-  "event": {
-    "profile": {
-      "tag": "similar-products",
-      "placement": "product-page"
-    }
-  },
-  "context": {
-    "website": {
-      "trackingCode": "abc123"
-    },
-    "userId": "user-123",
-    "sessionId": "session-456"
-  }
-}
-```
-
-Available event types:
-- `profile.render`: Profile rendered on page
-- `profile.impression`: Profile viewed by user  
-- `profile.click`: Profile clicked by user
-- `profile.product.render`: Product rendered in profile
-- `profile.product.impression`: Product viewed in profile
-- `profile.product.click`: Product clicked in profile
-
-#### 8. Recommendations (`searchspring_recommendations`)
-
-Get personalized product recommendations:
-
-```json
-{
-  "tags": ["similar-products", "trending"],
-  "products": ["ABC123"],
-  "limits": [5, 10],
-  "shopper": "user123"
-}
-```
-
-Required parameters:
-- `tags`: Array of recommendation profile tags/IDs
-
-Optional parameters:
-- `products`: Product SKUs being viewed (for cross-sell/similar)
-- `limits`: Maximum products per profile
-- `shopper`: Logged-in shopper ID for personalization
-- `cart`: Product SKUs in current cart
-- `lastViewed`: Recently viewed product SKUs
-- `bought_together`: Frequently bought together
-
-#### 9. Trending Data (`searchspring_trending`)
-
-Get trending products or search terms:
-
-```json
-{
-  "type": "products",
-  "timeframe": "day",
-  "categoryId": "electronics",
-  "limit": 20
-}
-```
-
-#### 10. Finder API (`searchspring_finder`)
-
-Get product facets for building product finder interfaces:
-
-```json
-{
-  "filters": {
-    "color": "blue",
-    "brand": ["Nike", "Adidas"]
-  },
-  "includedFacets": ["color", "size", "brand"]
-}
-```
-
-#### 12. Code Validation (`searchspring_code_validator`)
-
-**NEW**: Validate and troubleshoot your Searchspring implementation:
-
-```json
-{
-  "code": "<script>if (typeof ss != 'undefined') { ss.track.product.view({sku: 'ABC123'}); }</script>",
+Input: {
+  "code": "<script>ss.track.product.view({sku: 'ABC'});</script>",
   "codeType": "tracking",
-  "platform": "shopify",
-  "issue": "Tracking events not appearing in analytics"
+  "issue": "Events not showing in analytics"
 }
+Output: ❌ Missing IntelliSuggest script, ⚠️ No safety check, 🔧 Troubleshooting steps
 ```
 
-**Returns**:
-- ✅ Validation results (what's working correctly)
-- ⚠️ Warnings (potential issues)
-- 💡 Suggestions (improvements)
-- 🔧 Troubleshooting (specific issue diagnosis)
-
-Supported code types:
-- `tracking`: IntelliSuggest event tracking validation
-- `search`: Search API implementation validation
-- `autocomplete`: Autocomplete implementation validation
-- `recommendations`: Recommendation integration validation
-
-#### 9. Finder API (`searchspring_finder`)
-
-Advanced product discovery with faceting:
-
+### Generate Platform Code
 ```json
-{
-  "query": "athletic wear",
-  "filters": {
-    "brand": ["Nike", "Adidas"],
-    "price": "25-100",
-    "size": ["M", "L"]
-  },
-  "facets": ["brand", "price", "size", "color"],
-  "sort": "popularity_desc",
-  "page": 1,
-  "resultsPerPage": 20,
-  "includeMetadata": true
-}
+Input: {"platform": "shopify", "eventType": "product", "sku": "DEMO-123"}
+Output: Liquid template code for Shopify product tracking
 ```
 
-## Integration with MCP Clients
+## Integration Workflow
 
-This server can be used with any MCP-compatible client. Here's how to configure it with Claude Desktop:
+1. **Planning** → Use search/autocomplete tools to understand API structure
+2. **Implementation** → Use platform-specific tools to generate tracking code
+3. **Validation** → Use code validator to check implementation
+4. **Troubleshooting** → Use validator with specific issues for diagnosis
+5. **Testing** → Use generated API URLs to test endpoints
 
-1. Add to your MCP settings file (`claude_desktop_config.json`):
+## Testing
 
+Test the MCP server:
+```bash
+npm test
+```
+
+For interactive testing with MCP clients, see the MCP Client Integration section below.
+
+## Configuration Options
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SEARCHSPRING_SITE_ID` | ✅ Yes | Your Searchspring site identifier |
+| `SEARCHSPRING_SECRET_KEY` | ❌ No | Only needed for bulk indexing tools |
+| `SEARCHSPRING_TIMEOUT` | ❌ No | Request timeout in ms (default: 10000) |
+
+## MCP Client Integration
+
+### Claude Desktop
+Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
     "searchspring": {
       "command": "node",
-      "args": ["path/to/searchspring-mcp-server/dist/index.js"],
+      "args": ["path/to/dist/index.js"],
       "env": {
-        "SEARCHSPRING_API_KEY": "your_api_key",
         "SEARCHSPRING_SITE_ID": "your_site_id"
       }
     }
@@ -314,47 +137,18 @@ This server can be used with any MCP-compatible client. Here's how to configure 
 }
 ```
 
-2. Restart Claude Desktop
+## Common Use Cases
 
-## API Documentation
+**New Searchspring Customer**: Get implementation guidance for search, autocomplete, and tracking
+**Existing Implementation Issues**: Validate code and get troubleshooting help
+**Platform Migration**: Generate platform-specific tracking code
+**Development Team Onboarding**: Understand API structure and best practices
 
-For detailed information about Searchspring APIs, visit:
-- [Searchspring Documentation](https://docs.searchspring.com)
-- [API Reference](https://docs.searchspring.com/api)
+## Support
 
-## Development
-
-### Project Structure
-
-```
-src/
-├── index.ts              # Main MCP server setup
-├── searchspring-client.ts # Searchspring API client
-└── config.ts             # Configuration management
-```
-
-### Adding New Tools
-
-To add a new tool:
-
-1. Add the tool definition to the `tools` array in `index.ts`
-2. Add the corresponding method to `SearchspringClient`
-3. Add the case handler in the tool call switch statement
-
-### Error Handling
-
-The server includes comprehensive error handling:
-- Configuration validation on startup
-- API request/response error handling
-- Proper error messages returned to MCP clients
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- 📖 **Documentation**: https://docs.searchspring.com/
+- 🎯 **Help Center**: https://help.searchspring.net/
+- 🔧 **Implementation Guides**: https://help.searchspring.net/hc/en-us/sections/201185149
 
 ## License
 
