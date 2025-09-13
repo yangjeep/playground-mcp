@@ -1,21 +1,25 @@
-# Searchspring MCP Server Examples
+# Searchspring Integration Assistant Examples
 
-This document provides examples of how to use the Searchspring MCP Server tools.
+This document provides examples of how to use the Searchspring Integration Assistant MCP Server tools for implementation guidance, code validation, and troubleshooting.
+
+**IMPORTANT**: This MCP server provides implementation guidance and code validation - it does NOT make direct API calls or return live data.
 
 ## Configuration
 
-First, make sure you have your Searchspring credentials configured:
+Set up your Searchspring site ID for implementation guidance:
 
 ```bash
-export SEARCHSPRING_API_KEY="your_api_key_here"
 export SEARCHSPRING_SITE_ID="your_site_id_here"
+
+# Optional: Secret key (only needed for bulk indexing guidance)
+export SEARCHSPRING_SECRET_KEY="your_secret_key_here"
 ```
 
-## Example Tool Calls
+## Integration Guidance Examples
 
-### 1. Product Search
+### 1. Search API Implementation
 
-Search for running shoes with filters:
+Get complete implementation guidance for product search:
 
 ```json
 {
@@ -23,257 +27,362 @@ Search for running shoes with filters:
   "parameters": {
     "query": "running shoes",
     "page": 1,
-    "resultsPerPage": 12,
+    "resultsPerPage": 20,
     "filters": {
-      "brand": ["Nike", "Adidas", "New Balance"],
-      "price": "50-150",
-      "size": ["8", "9", "10"]
+      "brand": ["Nike", "Adidas"],
+      "color": "blue"
     },
-    "sort": "price_asc"
+    "sort": {
+      "price": "asc"
+    }
   }
 }
 ```
 
-### 2. Autocomplete Suggestions
+**Returns:**
+- Complete API endpoint URL with parameters
+- JavaScript implementation example with error handling
+- Required vs optional parameter explanations
+- Documentation links
 
-Get autocomplete suggestions for "runn":
+### 2. Autocomplete Implementation
+
+Get real-time search suggestions implementation:
 
 ```json
 {
   "tool": "searchspring_autocomplete",
   "parameters": {
     "query": "runn",
-    "limit": 8
+    "resultsPerPage": 8
   }
 }
 ```
 
-### 3. Product Suggestions
+**Returns:**
+- Debounced input handler implementation
+- Fetch API example with proper error handling
+- UI integration patterns
+- Performance best practices
 
-Get product suggestions for athletic wear:
+### 3. Spell Correction & Suggestions
+
+Get spell correction implementation guidance:
 
 ```json
 {
   "tool": "searchspring_suggest",
   "parameters": {
-    "query": "athletic wear",
-    "categories": ["apparel", "shoes", "accessories"],
-    "limit": 10
+    "query": "atheltic wear",
+    "language": "en",
+    "suggestionCount": 4
   }
 }
 ```
 
-### 4. IntelliSuggest Tracking
+**Returns:**
+- Spell correction API implementation
+- "Did you mean?" UI patterns
+- Alternative suggestion handling
 
-Track user interactions for IntelliSuggest analytics:
+### 4. Trending Terms Implementation
 
-```json
-{
-  "tool": "searchspring_intellisuggest_track",
-  "parameters": {
-    "interaction": "search",
-    "userId": "user_12345",
-    "sessionId": "session_67890",
-    "query": "comfortable walking shoes",
-    "metadata": {
-      "page": "search-results",
-      "source": "autocomplete"
-    }
-  }
-}
-```
-
-### 5. Trending Products
-
-Get trending products in the electronics category:
+Get trending search terms implementation:
 
 ```json
 {
   "tool": "searchspring_trending",
   "parameters": {
-    "type": "products",
-    "timeframe": "week",
-    "categoryId": "electronics",
-    "limit": 15
+    "limit": 6
   }
 }
 ```
 
-### 6. Product Recommendations
+**Returns:**
+- Homepage trending implementation
+- No-results page alternative queries
+- Dynamic content loading patterns
 
-Get related product recommendations:
+## Platform-Specific Code Generation
+
+### 5. Shopify IntelliSuggest Tracking
+
+Generate Shopify-specific tracking code:
 
 ```json
 {
-  "tool": "searchspring_recommendations",
+  "tool": "searchspring_platform_implementation",
   "parameters": {
-    "type": "related",
-    "productId": "PROD_12345",
-    "userId": "user_12345",
-    "limit": 8
+    "platform": "shopify",
+    "eventType": "product",
+    "sku": "DEMO-SHOE-123",
+    "price": 99.99
   }
 }
 ```
 
-Get trending recommendations:
+**Returns:**
+- Liquid template syntax implementation
+- Product page tracking code
+- Required script inclusion
+- Platform-specific documentation
+
+### 6. Magento 2 Implementation
+
+Generate Magento 2 tracking code:
 
 ```json
 {
-  "tool": "searchspring_recommendations",
+  "tool": "searchspring_platform_implementation",
   "parameters": {
-    "type": "trending",
-    "categoryId": "shoes",
-    "limit": 10
+    "platform": "magento2",
+    "eventType": "cart",
+    "sku": "PROD-456",
+    "price": 29.99,
+    "quantity": 2
   }
 }
 ```
 
-### 7. Event Tracking
+**Returns:**
+- PHP template syntax (.phtml)
+- Cart page tracking implementation
+- Magento-specific variable usage
 
-Track a product view event:
+### 7. Custom Platform Implementation
+
+Get generic implementation for custom platforms:
 
 ```json
 {
-  "tool": "searchspring_beacon_track",
+  "tool": "searchspring_platform_implementation",
   "parameters": {
-    "event": "view",
-    "userId": "user_12345",
-    "sessionId": "session_67890",
-    "productId": "PROD_12345",
-    "metadata": {
-      "page": "product-detail",
-      "referrer": "search-results",
-      "position": 3
-    }
+    "platform": "custom",
+    "eventType": "sale",
+    "sku": "ORDER-789",
+    "price": 199.99,
+    "quantity": 1
   }
 }
 ```
 
-Track a search event:
+## Code Validation & Troubleshooting
+
+### 8. Validate Good Implementation
+
+Check a properly implemented tracking code:
 
 ```json
 {
-  "tool": "searchspring_beacon_track",
+  "tool": "searchspring_code_validator",
   "parameters": {
-    "event": "search",
-    "userId": "user_12345",
-    "sessionId": "session_67890",
-    "query": "running shoes",
-    "metadata": {
-      "results_count": 45,
-      "page": "search-results"
-    }
+    "code": "<script src=\"//cdn.searchspring.net/intellisuggest/is.min.js\"></script>\n<script>\nif (typeof ss != 'undefined') {\n  ss.track.product.view({\n    sku: 'PRODUCT-123',\n    name: 'Running Shoes',\n    price: 99.99\n  });\n}\n</script>",
+    "codeType": "tracking",
+    "platform": "custom"
   }
 }
 ```
 
-Track a purchase event:
+**Returns:**
+- ✅ Validation results (what's working)
+- Best practices confirmation
+- Documentation links
+
+### 9. Troubleshoot Problematic Code
+
+Identify issues in broken implementation:
 
 ```json
 {
-  "tool": "searchspring_beacon_track",
+  "tool": "searchspring_code_validator",
   "parameters": {
-    "event": "purchase",
-    "userId": "user_12345",
-    "sessionId": "session_67890",
-    "productId": "PROD_12345",
-    "metadata": {
+    "code": "<script async src=\"//cdn.searchspring.net/intellisuggest/is.min.js\"></script>\n<script>\nss.track.product.view({\n  name: 'Running Shoes',\n  price: 99.99\n});\n</script>",
+    "codeType": "tracking",
+    "platform": "shopify",
+    "issue": "Tracking events not appearing in analytics"
+  }
+}
+```
+
+**Returns:**
+- ❌ Issues identified (missing SKU, unsafe script loading)
+- ⚠️ Warnings (async script, missing safety checks)
+- 🔧 Specific troubleshooting for the reported issue
+- 💡 Suggestions for improvements
+
+### 10. Search Implementation Validation
+
+Validate search API integration:
+
+```json
+{
+  "tool": "searchspring_code_validator",
+  "parameters": {
+    "code": "fetch('https://abc123.a.searchspring.io/api/search/search.json?siteId=abc123&q=test')\n  .then(response => response.json())\n  .then(data => console.log(data));",
+    "codeType": "search",
+    "issue": "Getting CORS errors"
+  }
+}
+```
+
+**Returns:**
+- Missing parameter analysis
+- CORS troubleshooting guidance
+- Error handling recommendations
+
+## Tracking Implementation Examples
+
+### 11. IntelliSuggest Product Tracking
+
+Get guidance for product view tracking:
+
+```json
+{
+  "tool": "searchspring_intellisuggest_track",
+  "parameters": {
+    "type": "product",
+    "event": {
+      "sku": "PRODUCT-123",
+      "name": "Athletic Sneakers",
       "price": 89.99,
-      "quantity": 1,
-      "order_id": "ORDER_789"
+      "category": "footwear"
     }
   }
 }
 ```
 
-### 8. Bulk Product Indexing
+### 12. Cart Event Tracking
 
-Index multiple products at once:
-
-```json
-{
-  "tool": "searchspring_bulk_index",
-  "parameters": {
-    "products": [
-      {
-        "id": "SHOE_001",
-        "title": "Air Max Running Shoes",
-        "brand": "Nike",
-        "price": 129.99,
-        "category": "shoes",
-        "in_stock": true,
-        "description": "High-performance running shoes with air cushioning"
-      },
-      {
-        "id": "SHIRT_001", 
-        "title": "Athletic Performance T-Shirt",
-        "brand": "Under Armour",
-        "price": 34.99,
-        "category": "apparel",
-        "in_stock": true,
-        "description": "Moisture-wicking athletic shirt"
-      }
-    ],
-    "operation": "add",
-    "batchSize": 50,
-    "validateOnly": false
-  }
-}
-```
-
-### 9. Advanced Product Discovery (Finder)
-
-Use the Finder API for advanced product discovery with faceting:
+Get guidance for cart addition tracking:
 
 ```json
 {
-  "tool": "searchspring_finder",
+  "tool": "searchspring_intellisuggest_track",
   "parameters": {
-    "query": "athletic wear",
-    "filters": {
-      "brand": ["Nike", "Adidas"],
-      "price": "25-100",
+    "type": "cart",
+    "event": {
+      "sku": "PRODUCT-456",
+      "name": "Sports T-Shirt",
+      "price": 24.99,
+      "quantity": 2,
       "category": "apparel"
-    },
-    "facets": ["brand", "price", "size", "color"],
-    "sort": "popularity_desc",
-    "page": 1,
-    "resultsPerPage": 20,
-    "includeMetadata": true
+    }
   }
 }
 ```
 
-## Common Use Cases
+### 13. Purchase Event Tracking
 
-### E-commerce Site Search Implementation
+Get guidance for purchase completion tracking:
 
-1. **Search Bar with Autocomplete**:
-   - Use `searchspring_autocomplete` for real-time suggestions
-   - Use `searchspring_search` for full search results
+```json
+{
+  "tool": "searchspring_intellisuggest_track",
+  "parameters": {
+    "type": "sale",
+    "event": {
+      "sku": "PRODUCT-789",
+      "name": "Running Shorts",
+      "price": 34.99,
+      "quantity": 1,
+      "category": "apparel"
+    }
+  }
+}
+```
 
-2. **Product Discovery**:
-   - Use `searchspring_suggest` for category-based suggestions
-   - Use `searchspring_trending` to show popular items
-   - Use `searchspring_finder` for advanced discovery with faceting
+## Implementation Flow Examples
 
-3. **Personalized Experience**:
-   - Use `searchspring_intellisuggest_track` for tracking user interactions
-   - Use `searchspring_recommendations` with user context
+### 14. Search Result Click Tracking
 
-4. **Analytics and Optimization**:
-   - Use `searchspring_beacon_track` to track all user interactions
-   - Monitor search patterns and product engagement
+Get implementation guidance for search result clicks:
 
-5. **Product Management**:
-   - Use `searchspring_bulk_index` to manage product catalogs
-   - Bulk update product information and availability
+```json
+{
+  "tool": "searchspring_search_result_click",
+  "parameters": {
+    "intellisuggestData": "eyJ0eXBlIjoic2VhcmNoIiwic291cmNlIjoic2VhcmNoIn0=",
+    "intellisuggestSignature": "abc123def456",
+    "note": "Implementing on product listing page"
+  }
+}
+```
 
-### Customer Onboarding Flow
+**Returns:**
+- IntelliSuggest JavaScript SDK requirements
+- Implementation instructions (not direct API calls)
+- Documentation links for proper setup
 
-For new Searchspring customers, this MCP server helps with:
+### 15. Recommendations Implementation
 
-1. **API Testing**: Quickly test all Searchspring endpoints
-2. **Integration Planning**: Understand data structures and responses  
-3. **Proof of Concept**: Build rapid prototypes using the tools
-4. **Documentation**: Generate integration examples from tool responses
+Get guidance for recommendation profiles:
+
+```json
+{
+  "tool": "searchspring_recommendations",
+  "parameters": {
+    "tags": ["similar-products", "trending"],
+    "products": ["PRODUCT-123"],
+    "limits": [5, 10],
+    "shopper": "user123"
+  }
+}
+```
+
+**Returns:**
+- API endpoint construction
+- Parameter explanation
+- Implementation examples
+
+## Common Integration Scenarios
+
+### New Customer Onboarding
+
+1. **Start with Search**: Use `searchspring_search` to understand API structure
+2. **Add Autocomplete**: Use `searchspring_autocomplete` for enhanced UX
+3. **Implement Tracking**: Use `searchspring_platform_implementation` for your platform
+4. **Validate Code**: Use `searchspring_code_validator` to ensure correctness
+5. **Add Recommendations**: Use `searchspring_recommendations` for personalization
+
+### Troubleshooting Existing Implementation
+
+1. **Code Analysis**: Use `searchspring_code_validator` with your existing code
+2. **Issue-Specific Help**: Include the `issue` parameter for targeted troubleshooting
+3. **Platform Comparison**: Compare with `searchspring_platform_implementation` output
+4. **Best Practices**: Review suggestions and warnings from validation
+
+### Testing & Validation Workflow
+
+1. **Implementation**: Generate code using platform-specific tools
+2. **Validation**: Check implementation with code validator
+3. **Testing**: Use generated API URLs to test endpoints
+4. **Troubleshooting**: Use validator with specific issues
+5. **Documentation**: Follow provided documentation links
+
+## Demo & Interactive Testing
+
+Run the included demo for hands-on examples:
+
+```bash
+./demo.sh
+```
+
+The demo showcases:
+- 6 real-world integration scenarios
+- Code validation examples (good vs problematic)
+- Platform-specific code generation
+- Troubleshooting guidance
+- Interactive testing options
+
+## Support Resources
+
+All tools provide:
+- 📖 **Documentation Links**: Direct links to relevant Searchspring docs
+- 🔧 **Troubleshooting**: Issue-specific guidance
+- 💡 **Best Practices**: Security and performance recommendations
+- ✅ **Validation**: Code correctness verification
+
+For additional support:
+- Documentation: https://docs.searchspring.com/
+- Support: https://help.searchspring.net/
+- Implementation Guides: https://help.searchspring.net/hc/en-us/sections/201185149
