@@ -47,7 +47,7 @@ Project guidance for Claude Code when working with the Searchspring Integration 
 | `searchspring_code_generator` | Platform-specific code | API + platform (+ eventType for tracking) | Ready-to-use implementation code |
 | `searchspring_code_validator` | Code analysis | Code + codeType (+ platform + issue) | ✅ Validation, ⚠️ warnings, 💡 suggestions, 🔧 troubleshooting |
 
-**Supported Platforms**: `shopify`, `bigcommerce`, `magento2`, `javascript`, `php`, `python`, `custom`
+**Supported Platforms**: `shopify`, `bigcommerce`, `magento1`, `magento2`, `miva`, `commercev3`, `3dcart`, `volusion`, `javascript`, `php`, `python`, `custom`
 **Supported Code Types**: `search`, `autocomplete`, `suggest`, `trending`, `recommendations`, `finder`, `beacon`, `bulk-index`, `tracking`
 
 ## Architecture
@@ -104,6 +104,7 @@ All tools return:
 2. Use `searchspring_parameter_guide` for detailed parameter understanding
 3. Use `searchspring_code_generator` for platform-specific implementation
 4. Use `searchspring_code_validator` to ensure correctness
+5. **Special attention for Shopify**: Check for checkout extensibility requirements
 
 ### For Code Review
 1. Use code validator with existing implementation
@@ -117,10 +118,22 @@ All tools return:
 3. Validate fixes with code validator
 4. Test with generated API URLs
 
+## Docker Deployment
+
+**Production Ready**: Dockerfile included for Kubernetes/Docker deployment
+**Security**: Non-root user, minimal Alpine base, production optimizations
+**Environment**: Configurable via environment variables
+
+```bash
+docker build -t searchspring-mcp .
+docker run -e SEARCHSPRING_SITE_ID=your_site_id searchspring-mcp
+```
+
 ## Testing
 
 **Unit Tests**: `npm test` runs validation tests
 **MCP Integration**: Configure with Claude Desktop or other MCP clients for interactive testing
+**Platform Testing**: Cross-platform validation with template syntax checking
 
 ## Important Reminders
 
@@ -129,3 +142,9 @@ All tools return:
 3. **Provide complete examples** - Include error handling, best practices, and documentation
 4. **Platform-specific guidance** - Tailor responses to user's platform when specified
 5. **Validation is key** - Always validate implementations and provide improvement suggestions
+6. **Documentation Sources** - Implementation is cross-checked against:
+   - **docs.searchspring.com** (Official API documentation)
+   - **Searchspring Zendesk Knowledge Base** (Platform-specific guides)
+   - **Guru Knowledge Base** (Internal implementation details)
+7. **Modern Platform Requirements** - Include Shopify checkout extensibility and Web Pixel guidance
+8. **Production Ready** - Docker deployment support with security best practices

@@ -25,10 +25,11 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
 
 ## What This MCP Does
 
-✅ **Implementation Guidance** - Step-by-step API integration instructions
-✅ **Code Validation** - Analyze existing implementations for issues
-✅ **Platform-Specific Code** - Generate Shopify, Magento, etc. tracking code
-✅ **Troubleshooting** - Diagnose common integration problems
+✅ **Implementation Guidance** - Step-by-step API integration instructions for all 8 Searchspring APIs
+✅ **Code Validation** - Analyze existing implementations for issues with platform-specific checks
+✅ **Platform-Specific Code** - Generate code for Shopify, BigCommerce, Magento, and 7+ platforms
+✅ **Troubleshooting** - Diagnose common integration problems with targeted solutions
+✅ **Modern Platform Support** - Includes Shopify checkout extensibility and Web Pixel guidance
 ✅ **Documentation Links** - Direct links to relevant Searchspring docs
 
 ❌ **Not an API Proxy** - Does not make live API calls or return product data
@@ -51,7 +52,7 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
 | `searchspring_code_generator` | API + platform (+ eventType for tracking) | Platform-specific implementation code |
 | `searchspring_code_validator` | Code + codeType (+ platform + issue) | Validation results, warnings, suggestions, and troubleshooting |
 
-**Supported Platforms**: `shopify`, `bigcommerce`, `magento2`, `javascript`, `php`, `python`, `custom`
+**Supported Platforms**: `shopify`, `bigcommerce`, `magento1`, `magento2`, `miva`, `commercev3`, `3dcart`, `volusion`, `javascript`, `php`, `python`, `custom`
 **Supported Code Types**: `search`, `autocomplete`, `suggest`, `trending`, `recommendations`, `finder`, `beacon`, `bulk-index`, `tracking`
 
 ## Example Usage
@@ -132,12 +133,27 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
+## Docker Deployment
+
+Ready for production deployment with Docker:
+
+```bash
+# Build the Docker image
+docker build -t searchspring-mcp .
+
+# Run with environment variables
+docker run -e SEARCHSPRING_SITE_ID=your_site_id searchspring-mcp
+```
+
+**Security Features**: Non-root user, minimal Alpine base, production-optimized
+
 ## Common Use Cases
 
 **New Searchspring Customer**: Get implementation guidance for search, autocomplete, and tracking
 **Existing Implementation Issues**: Validate code and get troubleshooting help
 **Platform Migration**: Generate platform-specific tracking code
 **Development Team Onboarding**: Understand API structure and best practices
+**Modern Shopify Stores**: Get guidance for checkout extensibility and Web Pixel tracking
 
 ## Support
 
