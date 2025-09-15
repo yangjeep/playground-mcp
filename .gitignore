@@ -50,3 +50,6 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Documentation clone (external repo)
+docs.searchspring.com/

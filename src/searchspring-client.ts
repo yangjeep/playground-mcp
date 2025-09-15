@@ -64,16 +64,17 @@ export class SearchspringClient {
           "Faceted navigation"
         ],
         bestPractices: [
-          "Always include tracking parameters (userId, sessionId, pageLoadId)",
-          "Use background filters (bgfilter.*) for permanent filtering",
-          "Implement proper error handling",
-          "Use debouncing for real-time search",
-          "Include pagination for large result sets"
+          "Always include tracking parameters: userId (from ssUserId cookie), sessionId (from ssSessionIdNamespace cookie), pageLoadId (UUID v4), domain (window.location.href)",
+          "Use background filters (bgfilter.*) for permanent filtering, not filter.*",
+          "Implement proper error handling with .catch()",
+          "Use debouncing for real-time search (minimum 50ms for autocomplete)",
+          "Include pagination for large result sets",
+          "Use query parameter (q) for all search requests"
         ]
       },
       autocomplete: {
         name: "Autocomplete API",
-        description: "Real-time search suggestions as user types",
+        description: "Real-time product preview as user types - REQUIRED for autocomplete functionality (not Search API)",
         endpoint: `https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json`,
         requiredParams: ["siteId", "resultsFormat", "userId", "sessionId", "pageLoadId", "domain"],
         optionalParams: ["q", "resultsPerPage", "page", "filter.*", "bgfilter.*", "sort.*", "redirectResponse", "lastViewed", "cart", "shopper"],
@@ -87,7 +88,7 @@ searchInput.addEventListener('input', function(e) {
   if (query.length >= 2) {
     debounceTimer = setTimeout(() => {
       fetchAutocomplete(query);
-    }, 300);
+    }, 50); // 50ms debounce as recommended by Searchspring docs
   }
 });
 
@@ -217,12 +218,12 @@ function fetchAutocomplete(query) {
       },
       finder: {
         name: "Finder API",
-        description: "Faceted search for building product finder interfaces",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/search/finder.json`,
-        requiredParams: ["siteId", "resultsPerPage"],
+        description: "Faceted search for building product finder interfaces - uses Search API with resultsPerPage=0",
+        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/search/search.json`,
+        requiredParams: ["siteId", "resultsPerPage=0"],
         optionalParams: ["filter.*", "bgfilter.*", "includedFacets", "excludedFacets"],
         example: `function getFacets() {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/finder.json?siteId=${this.config.siteId}&resultsPerPage=0&filter.category=shoes')
+  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?siteId=${this.config.siteId}&resultsPerPage=0&filter.category=shoes')
     .then(response => response.json())
     .then(data => {
       data.facets.forEach(facet => {
@@ -249,10 +250,10 @@ function fetchAutocomplete(query) {
       },
       beacon: {
         name: "Beacon API",
-        description: "Analytics event tracking for recommendations and user behavior",
+        description: "Advanced event tracking for Personalized Recommendations - NOTE: For basic product tracking use IntelliSuggest ss.track.* methods",
         endpoint: `https://beacon.searchspring.io/api/event`,
-        requiredParams: ["type", "category", "siteId"],
-        optionalParams: ["id", "userid", "sessionid", "data", "context"],
+        requiredParams: ["array of event objects with: category, context, event, id, type"],
+        optionalParams: ["pid (for profile.product.* events)"],
         example: `function trackEvent(eventType, eventData) {
   const payload = {
     type: eventType,
@@ -429,43 +430,56 @@ ${guide.bestPractices.map(practice => `- ${practice}`).join('\n')}
           relatedParams: ["resultsPerPage", "page"]
         },
         userId: {
-          description: "Unique identifier for tracking user behavior",
+          description: "Unique identifier for tracking user behavior - sourced from ssUserId cookie",
           type: "string",
-          example: "user-12345 or anonymous-uuid",
+          example: "value from ssUserId cookie",
           bestPractices: [
-            "Generate persistent UUID for anonymous users",
-            "Use actual user ID for logged-in users",
-            "Store in localStorage/cookie for consistency",
+            "Always get value from ssUserId cookie",
+            "Automatically set by Searchspring tracking",
+            "Do not manually generate - use cookie value",
             "Required for analytics and personalization"
           ],
           useCases: ["User tracking", "Personalization", "Analytics"],
-          relatedParams: ["sessionId", "pageLoadId", "shopper"]
+          relatedParams: ["sessionId", "pageLoadId", "domain"]
         },
         sessionId: {
-          description: "Session identifier for tracking user journey",
+          description: "Session identifier for tracking user journey - sourced from ssSessionIdNamespace cookie",
           type: "string",
-          example: "session-67890",
+          example: "value from ssSessionIdNamespace cookie",
           bestPractices: [
-            "Generate new UUID per session",
-            "Persist throughout user's visit",
-            "Reset on browser close/new session",
+            "Always get value from ssSessionIdNamespace cookie",
+            "Automatically set by Searchspring tracking",
+            "Do not manually generate - use cookie value",
             "Used for analytics and behavior tracking"
           ],
           useCases: ["Session tracking", "User journey analysis", "Analytics"],
           relatedParams: ["userId", "pageLoadId"]
         },
         pageLoadId: {
-          description: "Unique identifier for each page load/search",
+          description: "Unique identifier for each page load/search - should be UUID v4",
           type: "string",
-          example: "page-abc123",
+          example: "e560933a-b0fe-408d-8df5-807270e79fb8",
           bestPractices: [
-            "Generate new UUID for each search/page load",
-            "Used for tracking specific search interactions",
-            "Important for click tracking and analytics",
-            "Don't reuse across different searches"
+            "Generate new UUID v4 for each page load",
+            "Update on every physical page load",
+            "For SPA/headless: update on URL route change",
+            "Critical for proper analytics tracking"
           ],
           useCases: ["Search tracking", "Click analytics", "Performance monitoring"],
-          relatedParams: ["userId", "sessionId"]
+          relatedParams: ["userId", "sessionId", "domain"]
+        },
+        domain: {
+          description: "Current page URL - should be window.location.href",
+          type: "string",
+          example: "https://yoursite.com/search?q=shoes",
+          bestPractices: [
+            "Always use window.location.href value",
+            "Include full URL with protocol and parameters",
+            "Required for proper analytics and personalization",
+            "Do not hardcode - get dynamically"
+          ],
+          useCases: ["Page tracking", "Analytics", "Personalization context"],
+          relatedParams: ["userId", "sessionId", "pageLoadId"]
         }
       },
       autocomplete: {
@@ -475,7 +489,7 @@ ${guide.bestPractices.map(practice => `- ${practice}`).join('\n')}
           example: "runn (user typing 'running')",
           bestPractices: [
             "Start suggestions after 2+ characters",
-            "Use debouncing (300ms delay)",
+            "Use debouncing (50ms delay recommended by Searchspring)",
             "Handle special characters properly",
             "Clear suggestions when query is empty"
           ],
@@ -870,7 +884,7 @@ function buildProductFinder() {
     sessionId: getSessionId()
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/finder.json?' + params)
+  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?resultsPerPage=0&' + params)
     .then(response => response.json())
     .then(data => {
       console.log('Finder facets:', data.facets);
@@ -886,7 +900,7 @@ function buildProductFinder() {
 </div>
 
 <script>
-fetch('https://${this.config.siteId}.a.searchspring.io/api/search/finder.json?siteId=${this.config.siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?siteId=${this.config.siteId}&resultsPerPage=0&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
   .then(response => response.json())
   .then(data => {
     const facetsDiv = document.getElementById('finder-facets');
@@ -900,49 +914,74 @@ fetch('https://${this.config.siteId}.a.searchspring.io/api/search/finder.json?si
 </script>`
       },
       beacon: {
-        javascript: `// Beacon API implementation
-function trackEvent(eventType, eventData) {
-  const beaconData = {
-    siteId: '${this.config.siteId}',
-    userId: getUserId(),
-    sessionId: getSessionId(),
-    pageLoadId: getPageLoadId(),
-    domain: window.location.origin,
-    type: eventType,
-    ...eventData
-  };
+        javascript: `// Beacon API for Personalized Recommendations tracking
+// NOTE: This is for recommendations beacon tracking, not basic product tracking
+// For basic IntelliSuggest tracking use ss.track.* methods instead
 
+function trackRecommendationEvent(events) {
+  // Events should be an array of event objects
   fetch('https://beacon.searchspring.io/api/event', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(beaconData)
+    body: JSON.stringify(events)
   })
   .then(response => response.json())
-  .then(data => console.log('Event tracked:', data))
-  .catch(error => console.error('Beacon error:', error));
-}`,
-        shopify: `<!-- Shopify beacon tracking implementation -->
-<script>
-function trackSearchspringEvent(type, data) {
-  fetch('https://beacon.searchspring.io/api/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      siteId: '${this.config.siteId}',
-      userId: '{{ customer.id | default: "anonymous" }}',
-      sessionId: '{{ session.id }}',
-      domain: '{{ shop.permanent_domain }}',
-      type: type,
-      ...data
-    })
-  })
-  .then(response => response.json())
-  .then(result => console.log('Event tracked:', result))
+  .then(data => console.log('Recommendation events tracked:', data))
   .catch(error => console.error('Beacon error:', error));
 }
 
-// Example usage:
-// trackSearchspringEvent('product-view', { sku: '{{ product.variants.first.sku }}' });
+// Example: Track profile render event
+function trackProfileRender(profileId, tag, placement) {
+  const events = [{
+    category: "searchspring.recommendations.user-interactions",
+    context: {
+      pageLoadId: getPageLoadId(),
+      userId: getUserId(),
+      sessionId: getSessionId(),
+      website: { trackingCode: '${this.config.siteId}' }
+    },
+    event: {
+      context: { type: "product-recommendation", tag: tag, placement: placement },
+      profile: { tag: tag, placement: placement, seed: [""] }
+    },
+    id: profileId,
+    type: "profile.render"
+  }];
+  trackRecommendationEvent(events);
+}`,
+        shopify: `<!-- Shopify beacon tracking for Personalized Recommendations -->
+<!-- NOTE: For basic product tracking, use IntelliSuggest ss.track.* methods instead -->
+<script>
+function trackRecommendationEvents(events) {
+  fetch('https://beacon.searchspring.io/api/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(events)
+  })
+  .then(response => response.json())
+  .then(result => console.log('Recommendation events tracked:', result))
+  .catch(error => console.error('Beacon error:', error));
+}
+
+// Example: Track recommendation profile impression
+function trackProfileImpression(profileId, tag, placement) {
+  const events = [{
+    category: "searchspring.recommendations.user-interactions",
+    context: {
+      pageLoadId: generateUUID(),
+      userId: '{{ customer.id | default: "anonymous" }}',
+      sessionId: '{{ session.id }}',
+      website: { trackingCode: '${this.config.siteId}' }
+    },
+    event: {
+      context: { type: "product-recommendation", tag: tag, placement: placement },
+      profile: { tag: tag, placement: placement, seed: [""] }
+    },
+    id: profileId,
+    type: "profile.impression"
+  }];
+  trackRecommendationEvents(events);
+}
 </script>`
       },
       "bulk-index": {
