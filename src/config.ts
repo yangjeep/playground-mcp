@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Configuration schema using Zod for validation
 const SearchspringConfigSchema = z.object({
-  siteId: z.string().min(1, "Site ID is required"),
+  siteId: z.string().min(1, "Site ID is required").optional(),
   secretKey: z.string().min(1, "Secret key is required for bulk indexing").optional(),
   timeout: z.number().positive().optional().default(10000),
 });
@@ -22,9 +22,9 @@ export function validateConfig(): SearchspringConfig {
     if (error instanceof z.ZodError) {
       const missingFields = error.errors.map(err => err.path.join(".")).join(", ");
       throw new Error(
-        `Invalid Searchspring configuration. Missing or invalid fields: ${missingFields}\n\n` +
-        "Please ensure the following environment variables are set:\n" +
-        "- SEARCHSPRING_SITE_ID: Your Searchspring site ID\n" +
+        `Invalid Searchspring configuration. Invalid fields: ${missingFields}\n\n` +
+        "Optional environment variables:\n" +
+        "- SEARCHSPRING_SITE_ID: (optional) Your Searchspring site ID - LLM can provide examples\n" +
         "- SEARCHSPRING_SECRET_KEY: (optional) Your Searchspring secret key for bulk indexing\n" +
         "- SEARCHSPRING_TIMEOUT: (optional) Request timeout in milliseconds"
       );
