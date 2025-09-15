@@ -11,7 +11,7 @@ export interface PlatformImplementationParams {
 export interface CodeValidationParams {
   code: string;
   codeType: "search" | "autocomplete" | "suggest" | "trending" | "recommendations" | "finder" | "beacon" | "bulk-index" | "tracking";
-  platform?: "shopify" | "bigcommerce" | "magento2" | "custom" | "other";
+  platform?: "shopify" | "bigcommerce" | "magento1" | "magento2" | "miva" | "commercev3" | "3dcart" | "volusion" | "custom" | "other";
   issue?: string;
 }
 
@@ -26,7 +26,7 @@ export interface ParameterGuideParams {
 
 export interface CodeGeneratorParams {
   api: "search" | "autocomplete" | "suggest" | "trending" | "recommendations" | "finder" | "beacon" | "bulk-index" | "tracking";
-  platform: "shopify" | "bigcommerce" | "magento2" | "javascript" | "php" | "python" | "custom";
+  platform: "shopify" | "bigcommerce" | "magento1" | "magento2" | "miva" | "commercev3" | "3dcart" | "volusion" | "javascript" | "php" | "python" | "custom";
   eventType?: "product" | "cart" | "sale" | "search-click" | "impression";
   useCase?: string;
 }
@@ -300,20 +300,38 @@ function fetchAutocomplete(query) {
         endpoint: `https://index-api.searchspring.net/api/index/feed`,
         requiredParams: ["feedId"],
         optionalParams: ["requestedBy"],
-        example: `// Requires SEARCHSPRING_SECRET_KEY for authentication
-function triggerBulkIndex() {
-  const auth = btoa('${this.config.siteId}:' + secretKey);
+        example: `// Platform-specific bulk indexing implementation
+// For cart platforms (Shopify, BigCommerce) - use PUT method
+function triggerCartPlatformIndex(feedId, secretKey) {
+  // Authentication via URL (siteId:secretKey@host)
+  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
 
-  fetch('https://index-api.searchspring.net/api/index/feed?feedId=12345&requestedBy=admin@example.com', {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Basic ' + auth,
-      'User-Agent': 'YourApp/1.0.0'
-    }
+  fetch(url, {
+    method: 'PUT' // Downloads feed from cart platform
   })
   .then(response => response.json())
-  .then(data => console.log('Indexing started:', data))
-  .catch(error => console.error('Indexing error:', error));
+  .then(data => {
+    if (data.success) {
+      console.log('Bulk index triggered successfully');
+    }
+  })
+  .catch(error => console.error('Bulk index error:', error));
+}
+
+// For custom feeds - use POST with file upload
+function uploadCustomFeed(feedId, secretKey, feedFile) {
+  const formData = new FormData();
+  formData.append('feedFile', feedFile);
+
+  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'POST',
+    body: formData // multipart/form-data
+  })
+  .then(response => response.json())
+  .then(data => console.log('Feed uploaded:', data))
+  .catch(error => console.error('Upload error:', error));
 }`,
         useCases: [
           "Product catalog updates",
@@ -322,10 +340,12 @@ function triggerBulkIndex() {
           "Content management integration"
         ],
         bestPractices: [
-          "Requires secret key authentication",
-          "Use for batch updates, not real-time",
-          "Include requestedBy email for notifications",
-          "Monitor indexing status after triggering"
+          "Use PUT method for cart platforms (Shopify, BigCommerce, etc.)",
+          "Use POST method for custom feed uploads",
+          "Authentication: siteId:secretKey@ in URL (not headers)",
+          "Check status endpoint before triggering new index",
+          "Only one index per hour allowed",
+          "Use multipart/form-data for POST requests"
         ]
       }
     };
@@ -986,41 +1006,97 @@ function trackProfileImpression(profileId, tag, placement) {
       },
       "bulk-index": {
         javascript: `// Bulk Index API implementation
-function bulkIndexProducts(products) {
-  const indexData = {
-    siteId: '${this.config.siteId}',
-    secretKey: 'YOUR_SECRET_KEY', // Replace with actual secret key
-    products: products
-  };
+// NOTE: Use PUT for cart platforms (Shopify, BigCommerce), POST for custom feeds
 
-  fetch('https://index-api.searchspring.net/api/index/bulk', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(indexData)
+// For cart platforms (Shopify, BigCommerce, etc.) - triggers feed download
+function triggerBulkIndex(feedId, secretKey) {
+  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'PUT'
   })
   .then(response => response.json())
   .then(data => {
-    console.log('Bulk index response:', data);
-    if (data.batchId) {
-      checkIndexStatus(data.batchId);
+    console.log('Bulk index triggered:', data);
+    if (data.success) {
+      console.log('Index successfully queued');
+      checkIndexStatus();
     }
   })
   .catch(error => console.error('Bulk index error:', error));
+}
+
+// For custom feeds - uploads feed file
+function uploadCustomFeed(feedId, secretKey, feedFile) {
+  const formData = new FormData();
+  formData.append('feedFile', feedFile);
+
+  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Feed uploaded:', data);
+    if (data.success) {
+      console.log('Index successfully queued');
+    }
+  })
+  .catch(error => console.error('Feed upload error:', error));
 }`,
+        shopify: `<!-- Shopify Bulk Index implementation -->
+<!-- Use PUT method for cart platforms to trigger feed download -->
+<script>
+function triggerShopifyIndex(feedId, secretKey) {
+  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'PUT'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Shopify feed index triggered successfully');
+    }
+  })
+  .catch(error => console.error('Shopify index error:', error));
+}
+</script>`,
         php: `<?php
 // PHP Bulk Index API implementation
-function bulkIndexProducts($products) {
-    $data = [
-        'siteId' => '${this.config.siteId}',
-        'secretKey' => 'YOUR_SECRET_KEY', // Replace with actual secret key
-        'products' => $products
-    ];
+// For cart platforms - use PUT to trigger feed download
+function triggerBulkIndex($feedId, $secretKey) {
+    $url = 'https://${this.config.siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
 
-    $ch = curl_init('https://index-api.searchspring.net/api/index/bulk');
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode === 200) {
+        return json_decode($response, true);
+    } else {
+        throw new Exception('Bulk index failed with HTTP code: ' . $httpCode);
+    }
+}
+
+// For custom feeds - use POST with multipart/form-data
+function uploadCustomFeed($feedId, $secretKey, $feedFilePath) {
+    $url = 'https://${this.config.siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        'feedFile' => new CURLFile($feedFilePath)
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 
     $response = curl_exec($ch);
     curl_close($ch);
@@ -1028,44 +1104,6 @@ function bulkIndexProducts($products) {
     return json_decode($response, true);
 }
 ?>`
-  clearTimeout(debounceTimer);
-  const query = e.target.value;
-
-  if (query.length >= 2) {
-    debounceTimer = setTimeout(() => {
-      fetchAutocomplete(query);
-    }, 300);
-  } else {
-    hideSuggestions();
-  }
-});
-
-function fetchAutocomplete(query) {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${this.config.siteId}&resultsFormat=json&q=' + query)
-    .then(response => response.json())
-    .then(data => displaySuggestions(data))
-    .catch(error => console.error('Autocomplete error:', error));
-}`
-      },
-      recommendations: {
-        javascript: `// Recommendations implementation
-function loadRecommendations(tags, context = {}) {
-  const params = new URLSearchParams({
-    tags: tags.join(','),
-    limits: '5,10',
-    shopper: context.userId || '',
-    ...context
-  });
-
-  fetch('https://${this.config.siteId}.a.searchspring.io/boost/${this.config.siteId}/recommend?' + params)
-    .then(response => response.json())
-    .then(data => {
-      data.profiles.forEach(profile => {
-        displayRecommendations(profile.tag, profile.results);
-      });
-    })
-    .catch(error => console.error('Recommendations error:', error));
-}`
       }
     };
 
@@ -1143,6 +1181,82 @@ if (typeof ss != 'undefined') {
     quantity: {{ line_item.quantity }}
   });
   {% endfor %}
+}
+</script>`
+      },
+      bigcommerce: {
+        product: `<!-- Add to product page template (BigCommerce Stencil) -->
+<script>
+if (typeof ss != 'undefined') {
+  ss.track.product.view({
+    sku: '{{product.sku}}',
+    name: '{{product.title}}',
+    price: {{product.price.without_tax.value}}
+  });
+}
+</script>`,
+        cart: `<!-- Add to cart page template -->
+<script>
+if (typeof ss != 'undefined') {
+  {{#each cart.items}}
+  ss.track.cart.add({
+    sku: '{{sku}}',
+    name: '{{name}}',
+    price: {{price.value}},
+    quantity: {{quantity}}
+  });
+  {{/each}}
+}
+</script>`,
+        sale: `<!-- Add to order confirmation page -->
+<script>
+if (typeof ss != 'undefined') {
+  {{#each order.products}}
+  ss.track.purchase.buy({
+    sku: '{{sku}}',
+    name: '{{name}}',
+    price: {{price_ex_tax}},
+    quantity: {{quantity}}
+  });
+  {{/each}}
+}
+</script>`
+      },
+      magento2: {
+        product: `<!-- Add to product page template (Magento 2) -->
+<script>
+if (typeof ss != 'undefined') {
+  ss.track.product.view({
+    sku: '<?= $block->escapeHtml($_product->getSku()) ?>',
+    name: '<?= $block->escapeHtml($_product->getName()) ?>',
+    price: <?= $_product->getFinalPrice() ?>
+  });
+}
+</script>`,
+        cart: `<!-- Add to cart page template -->
+<script>
+if (typeof ss != 'undefined') {
+  <?php foreach ($block->getItems() as $item): ?>
+  ss.track.cart.add({
+    sku: '<?= $block->escapeHtml($item->getSku()) ?>',
+    name: '<?= $block->escapeHtml($item->getName()) ?>',
+    price: <?= $item->getPrice() ?>,
+    quantity: <?= $item->getQty() ?>
+  });
+  <?php endforeach; ?>
+}
+</script>`,
+        sale: `<!-- Add to success page template -->
+<script>
+if (typeof ss != 'undefined') {
+  <?php foreach ($block->getOrderItems() as $item): ?>
+  ss.track.purchase.buy({
+    sku: '<?= $block->escapeHtml($item->getSku()) ?>',
+    name: '<?= $block->escapeHtml($item->getName()) ?>',
+    price: <?= $item->getPrice() ?>,
+    quantity: <?= $item->getQtyOrdered() ?>
+  });
+  <?php endforeach; ?>
 }
 </script>`
       },
@@ -1343,9 +1457,23 @@ Requirements:
       }
     }
 
+    if (platform === "bigcommerce") {
+      if (codeType === "tracking" && !code.includes("{{#") && !code.includes("{{")) {
+        warnings.push("⚠️  No Handlebars template syntax detected - make sure you're using BigCommerce's Stencil template syntax");
+      }
+
+      if (code.includes("product.sku") && !code.includes("{{product.sku}}")) {
+        suggestions.push("💡 Use {{product.sku}} for BigCommerce Stencil template syntax");
+      }
+    }
+
     if (platform === "magento2") {
       if (codeType === "tracking" && !code.includes("<?=")) {
         warnings.push("⚠️  No PHP template syntax detected - make sure you're using Magento's .phtml syntax");
+      }
+
+      if (code.includes("$_product") && !code.includes("escapeHtml")) {
+        suggestions.push("💡 Use $block->escapeHtml() for proper data escaping in Magento 2");
       }
     }
 
