@@ -38,17 +38,30 @@ export class SearchspringClient {
     this.config = config;
   }
 
+  private getSiteIdOrExample(): string {
+    return this.config.siteId || "xyz789";
+  }
+
+  private addSiteIdNote(text: string): string {
+    if (!this.config.siteId) {
+      return text + "\n\n**Note**: Replace 'xyz789' with your actual Searchspring site ID (also known as tracking code) in all URLs and code examples above. This is a 6-character alphanumeric identifier provided by your Searchspring representative.";
+    }
+    return text;
+  }
+
   async getApiGuide(params: ApiGuideParams) {
     const { api } = params;
+
+    const siteId = this.getSiteIdOrExample();
 
     const apiGuides = {
       search: {
         name: "Search API",
         description: "Full-text product search with filtering, sorting, and pagination",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/search/search.json`,
+        endpoint: `https://${siteId}.a.searchspring.io/api/search/search.json`,
         requiredParams: ["siteId", "resultsFormat", "userId", "sessionId", "pageLoadId", "domain"],
         optionalParams: ["q", "page", "resultsPerPage", "filter.*", "bgfilter.*", "sort.*", "redirectResponse", "landingPage", "tag", "includedFacets", "excludedFacets", "disableInlineBanners", "lastViewed", "cart", "shopper"],
-        example: `fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?siteId=${this.config.siteId}&resultsFormat=json&q=shoes&userId=user123&sessionId=session456&pageLoadId=page789&domain=https://yoursite.com')
+        example: `fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsFormat=json&q=shoes&userId=user123&sessionId=session456&pageLoadId=page789&domain=https://yoursite.com')
   .then(response => response.json())
   .then(data => {
     console.log('Total results:', data.pagination.totalResults);
@@ -75,7 +88,7 @@ export class SearchspringClient {
       autocomplete: {
         name: "Autocomplete API",
         description: "Real-time product preview as user types - REQUIRED for autocomplete functionality (not Search API)",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json`,
+        endpoint: `https://${siteId}.a.searchspring.io/api/search/autocomplete.json`,
         requiredParams: ["siteId", "resultsFormat", "userId", "sessionId", "pageLoadId", "domain"],
         optionalParams: ["q", "resultsPerPage", "page", "filter.*", "bgfilter.*", "sort.*", "redirectResponse", "lastViewed", "cart", "shopper"],
         example: `const searchInput = document.getElementById('search');
@@ -93,7 +106,7 @@ searchInput.addEventListener('input', function(e) {
 });
 
 function fetchAutocomplete(query) {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${this.config.siteId}&resultsFormat=json&q=' + query + '&userId=user123&sessionId=session456&pageLoadId=page789&domain=https://yoursite.com')
+  fetch('https://${siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId=user123&sessionId=session456&pageLoadId=page789&domain=https://yoursite.com')
     .then(response => response.json())
     .then(data => displaySuggestions(data))
     .catch(error => console.error('Autocomplete error:', error));
@@ -115,11 +128,11 @@ function fetchAutocomplete(query) {
       suggest: {
         name: "Suggest API",
         description: "Spell correction and alternative search term suggestions",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/suggest/query`,
+        endpoint: `https://${siteId}.a.searchspring.io/api/suggest/query`,
         requiredParams: ["siteId"],
         optionalParams: ["q", "language", "suggestionCount", "productCount"],
         example: `function getSuggestions(query) {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/suggest/query?siteId=${this.config.siteId}&q=' + query + '&language=en&suggestionCount=4')
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/query?siteId=${siteId}&q=' + query + '&language=en&suggestionCount=4')
     .then(response => response.json())
     .then(data => {
       if (data.spellCorrection && data.spellCorrection.corrected) {
@@ -147,11 +160,11 @@ function fetchAutocomplete(query) {
       trending: {
         name: "Trending API",
         description: "Popular search terms and trending content",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/suggest/trending`,
+        endpoint: `https://${siteId}.a.searchspring.io/api/suggest/trending`,
         requiredParams: ["siteId"],
         optionalParams: ["limit"],
         example: `function loadTrendingTerms() {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/suggest/trending?siteId=${this.config.siteId}&limit=6')
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/trending?siteId=${siteId}&limit=6')
     .then(response => response.json())
     .then(data => {
       const container = document.getElementById('trending-terms');
@@ -180,7 +193,7 @@ function fetchAutocomplete(query) {
       recommendations: {
         name: "Recommendations API",
         description: "Personalized product recommendations",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/boost/${this.config.siteId}/recommend`,
+        endpoint: `https://${siteId}.a.searchspring.io/boost/${siteId}/recommend`,
         requiredParams: ["tags"],
         optionalParams: ["products", "blockedItems", "categories", "brands", "shopper", "cart", "lastViewed", "limits", "filter.*"],
         example: `function getRecommendations() {
@@ -191,7 +204,7 @@ function fetchAutocomplete(query) {
     shopper: 'user123'
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/boost/${this.config.siteId}/recommend?' + params)
+  fetch('https://${siteId}.a.searchspring.io/boost/${siteId}/recommend?' + params)
     .then(response => response.json())
     .then(data => {
       data.profiles.forEach(profile => {
@@ -219,11 +232,11 @@ function fetchAutocomplete(query) {
       finder: {
         name: "Finder API",
         description: "Faceted search for building product finder interfaces - uses Search API with resultsPerPage=0",
-        endpoint: `https://${this.config.siteId}.a.searchspring.io/api/search/search.json`,
+        endpoint: `https://${siteId}.a.searchspring.io/api/search/search.json`,
         requiredParams: ["siteId", "resultsPerPage=0"],
         optionalParams: ["filter.*", "bgfilter.*", "includedFacets", "excludedFacets"],
         example: `function getFacets() {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?siteId=${this.config.siteId}&resultsPerPage=0&filter.category=shoes')
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsPerPage=0&filter.category=shoes')
     .then(response => response.json())
     .then(data => {
       data.facets.forEach(facet => {
@@ -258,13 +271,13 @@ function fetchAutocomplete(query) {
   const payload = {
     type: eventType,
     category: 'searchspring.recommendations.user-interactions',
-    siteId: '${this.config.siteId}',
+    siteId: '${siteId}',
     id: 'event-' + Date.now(),
     userid: 'user123',
     sessionid: 'session456',
     data: eventData,
     context: {
-      website: { trackingCode: '${this.config.siteId}' },
+      website: { trackingCode: '${siteId}' },
       page: { url: window.location.href }
     }
   };
@@ -304,7 +317,7 @@ function fetchAutocomplete(query) {
 // For cart platforms (Shopify, BigCommerce) - use PUT method
 function triggerCartPlatformIndex(feedId, secretKey) {
   // Authentication via URL (siteId:secretKey@host)
-  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
 
   fetch(url, {
     method: 'PUT' // Downloads feed from cart platform
@@ -323,7 +336,7 @@ function uploadCustomFeed(feedId, secretKey, feedFile) {
   const formData = new FormData();
   formData.append('feedFile', feedFile);
 
-  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
 
   fetch(url, {
     method: 'POST',
@@ -359,7 +372,7 @@ function uploadCustomFeed(feedId, secretKey, feedFile) {
       content: [
         {
           type: "text",
-          text: `# ${guide.name} Implementation Guide
+          text: this.addSiteIdNote(`# ${guide.name} Implementation Guide
 
 ## Overview
 ${guide.description}
@@ -386,7 +399,7 @@ ${guide.bestPractices.map(practice => `- ${practice}`).join('\n')}
 ## Documentation
 📖 **Full API Documentation**: https://docs.searchspring.com/api/${api}/
 🎯 **Help Center**: https://help.searchspring.net/
-🔧 **Implementation Guides**: https://help.searchspring.net/hc/en-us/sections/201185149`,
+🔧 **Implementation Guides**: https://help.searchspring.net/hc/en-us/sections/201185149`),
         },
       ],
     };
@@ -678,13 +691,14 @@ ${paramGuide.relatedParams.map((param: string) => `- \`${param}\``).join('\n')}
   }
 
   private async generateApiCode(api: string, platform: string, useCase?: string) {
+    const siteId = this.getSiteIdOrExample();
     // Generate implementation code for specific APIs
     const codeTemplates: Record<string, Record<string, string>> = {
       search: {
         javascript: `// Search API implementation
 function searchProducts(query, filters = {}) {
   const params = new URLSearchParams({
-    siteId: '${this.config.siteId}',
+    siteId: '${siteId}',
     resultsFormat: 'json',
     q: query,
     userId: getUserId(),
@@ -698,7 +712,7 @@ function searchProducts(query, filters = {}) {
     params.append(\`filter.\${key}\`, value);
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?' + params)
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?' + params)
     .then(response => response.json())
     .then(data => {
       console.log('Total results:', data.pagination.totalResults);
@@ -718,7 +732,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
   e.preventDefault();
   const query = this.querySelector('input[name="q"]').value;
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?siteId=${this.config.siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}&domain={{ shop.permanent_domain }}')
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}&domain={{ shop.permanent_domain }}')
     .then(response => response.json())
     .then(data => displayResults(data))
     .catch(error => console.error('Search error:', error));
@@ -738,14 +752,14 @@ searchInput.addEventListener('input', function(e) {
 
   debounceTimer = setTimeout(() => {
     const params = new URLSearchParams({
-      siteId: '${this.config.siteId}',
+      siteId: '${siteId}',
       resultsFormat: 'json',
       q: query,
       userId: getUserId(),
       sessionId: getSessionId()
     });
 
-    fetch('https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json?' + params)
+    fetch('https://${siteId}.a.searchspring.io/api/search/autocomplete.json?' + params)
       .then(response => response.json())
       .then(data => displayAutocomplete(data.suggestions))
       .catch(error => console.error('Autocomplete error:', error));
@@ -772,7 +786,7 @@ searchInput.addEventListener('input', function(e) {
   }
 
   debounceTimer = setTimeout(() => {
-    fetch('https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${this.config.siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+    fetch('https://${siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
       .then(response => response.json())
       .then(data => {
         resultsDiv.innerHTML = data.suggestions.map(s =>
@@ -788,14 +802,14 @@ searchInput.addEventListener('input', function(e) {
         javascript: `// Suggest API implementation
 function getSuggestions(query) {
   const params = new URLSearchParams({
-    siteId: '${this.config.siteId}',
+    siteId: '${siteId}',
     resultsFormat: 'json',
     q: query,
     userId: getUserId(),
     sessionId: getSessionId()
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/suggest/query?' + params)
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/query?' + params)
     .then(response => response.json())
     .then(data => {
       if (data.suggested) {
@@ -808,7 +822,7 @@ function getSuggestions(query) {
         shopify: `<!-- Shopify spell check implementation -->
 <script>
 function checkSpelling(query) {
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/suggest/query?siteId=${this.config.siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/query?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
     .then(response => response.json())
     .then(data => {
       if (data.suggested && data.suggested !== query) {
@@ -823,13 +837,13 @@ function checkSpelling(query) {
         javascript: `// Trending API implementation
 function getTrendingSearches() {
   const params = new URLSearchParams({
-    siteId: '${this.config.siteId}',
+    siteId: '${siteId}',
     resultsFormat: 'json',
     userId: getUserId(),
     sessionId: getSessionId()
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/trending.json?' + params)
+  fetch('https://${siteId}.a.searchspring.io/api/search/trending.json?' + params)
     .then(response => response.json())
     .then(data => {
       console.log('Trending searches:', data.trending);
@@ -844,7 +858,7 @@ function getTrendingSearches() {
 </div>
 
 <script>
-fetch('https://${this.config.siteId}.a.searchspring.io/api/search/trending.json?siteId=${this.config.siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+fetch('https://${siteId}.a.searchspring.io/api/search/trending.json?siteId=${siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
   .then(response => response.json())
   .then(data => {
     const trendingList = document.getElementById('trending-list');
@@ -859,7 +873,7 @@ fetch('https://${this.config.siteId}.a.searchspring.io/api/search/trending.json?
         javascript: `// Recommendations API implementation
 function getRecommendations(options = {}) {
   const params = new URLSearchParams({
-    siteId: '${this.config.siteId}',
+    siteId: '${siteId}',
     resultsFormat: 'json',
     userId: getUserId(),
     sessionId: getSessionId(),
@@ -868,7 +882,7 @@ function getRecommendations(options = {}) {
     ...options
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/recommend/recommend.json?' + params)
+  fetch('https://${siteId}.a.searchspring.io/api/recommend/recommend.json?' + params)
     .then(response => response.json())
     .then(data => {
       console.log('Recommendations:', data.results);
@@ -883,7 +897,7 @@ function getRecommendations(options = {}) {
 </div>
 
 <script>
-fetch('https://${this.config.siteId}.a.searchspring.io/api/recommend/recommend.json?siteId=${this.config.siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}&domain={{ shop.permanent_domain }}')
+fetch('https://${siteId}.a.searchspring.io/api/recommend/recommend.json?siteId=${siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}&domain={{ shop.permanent_domain }}')
   .then(response => response.json())
   .then(data => {
     const grid = document.getElementById('recommendations-grid');
@@ -898,13 +912,13 @@ fetch('https://${this.config.siteId}.a.searchspring.io/api/recommend/recommend.j
         javascript: `// Finder API implementation
 function buildProductFinder() {
   const params = new URLSearchParams({
-    siteId: '${this.config.siteId}',
+    siteId: '${siteId}',
     resultsFormat: 'json',
     userId: getUserId(),
     sessionId: getSessionId()
   });
 
-  fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?resultsPerPage=0&' + params)
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?resultsPerPage=0&' + params)
     .then(response => response.json())
     .then(data => {
       console.log('Finder facets:', data.facets);
@@ -920,7 +934,7 @@ function buildProductFinder() {
 </div>
 
 <script>
-fetch('https://${this.config.siteId}.a.searchspring.io/api/search/search.json?siteId=${this.config.siteId}&resultsPerPage=0&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsPerPage=0&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
   .then(response => response.json())
   .then(data => {
     const facetsDiv = document.getElementById('finder-facets');
@@ -958,7 +972,7 @@ function trackProfileRender(profileId, tag, placement) {
       pageLoadId: getPageLoadId(),
       userId: getUserId(),
       sessionId: getSessionId(),
-      website: { trackingCode: '${this.config.siteId}' }
+      website: { trackingCode: '${siteId}' }
     },
     event: {
       context: { type: "product-recommendation", tag: tag, placement: placement },
@@ -991,7 +1005,7 @@ function trackProfileImpression(profileId, tag, placement) {
       pageLoadId: generateUUID(),
       userId: '{{ customer.id | default: "anonymous" }}',
       sessionId: '{{ session.id }}',
-      website: { trackingCode: '${this.config.siteId}' }
+      website: { trackingCode: '${siteId}' }
     },
     event: {
       context: { type: "product-recommendation", tag: tag, placement: placement },
@@ -1010,7 +1024,7 @@ function trackProfileImpression(profileId, tag, placement) {
 
 // For cart platforms (Shopify, BigCommerce, etc.) - triggers feed download
 function triggerBulkIndex(feedId, secretKey) {
-  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
 
   fetch(url, {
     method: 'PUT'
@@ -1031,7 +1045,7 @@ function uploadCustomFeed(feedId, secretKey, feedFile) {
   const formData = new FormData();
   formData.append('feedFile', feedFile);
 
-  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
 
   fetch(url, {
     method: 'POST',
@@ -1050,7 +1064,7 @@ function uploadCustomFeed(feedId, secretKey, feedFile) {
 <!-- Use PUT method for cart platforms to trigger feed download -->
 <script>
 function triggerShopifyIndex(feedId, secretKey) {
-  const url = 'https://${this.config.siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
 
   fetch(url, {
     method: 'PUT'
@@ -1068,7 +1082,7 @@ function triggerShopifyIndex(feedId, secretKey) {
 // PHP Bulk Index API implementation
 // For cart platforms - use PUT to trigger feed download
 function triggerBulkIndex($feedId, $secretKey) {
-    $url = 'https://${this.config.siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
+    $url = 'https://${siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
@@ -1088,7 +1102,7 @@ function triggerBulkIndex($feedId, $secretKey) {
 
 // For custom feeds - use POST with multipart/form-data
 function uploadCustomFeed($feedId, $secretKey, $feedFilePath) {
-    $url = 'https://${this.config.siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
+    $url = 'https://${siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, true);
@@ -1141,6 +1155,7 @@ ${apiCode}
   }
 
   private async generateTrackingCode(platform: string, eventType: string) {
+    const siteId = this.getSiteIdOrExample();
     const sku = "PRODUCT_SKU";
     const price = 99.99;
     const quantity = 1;
@@ -1341,6 +1356,7 @@ Requirements:
 
   async validateCode(params: CodeValidationParams) {
     const { code, codeType, platform, issue } = params;
+    const siteId = this.getSiteIdOrExample();
 
     const validationResults: string[] = [];
     const warnings: string[] = [];
@@ -1533,7 +1549,7 @@ Troubleshooting for: "${issue}"
 
       if (issue.toLowerCase().includes("search") || issue.toLowerCase().includes("results")) {
         troubleshooting += `API integration issues:
-- Verify siteId is correct: ${this.config.siteId}
+- Verify siteId is correct: ${siteId}
 - Check CORS settings if calling from browser
 - Ensure all required parameters are included
 - Check network tab for API response errors

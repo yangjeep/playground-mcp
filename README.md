@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
 
 > **Important**: This is an integration assistant, not an API proxy. It returns implementation guidance and code examples rather than live API data.
 
-## Quick Start
+## Developer Setup
 
 1. **Install dependencies**:
    ```bash
@@ -12,16 +12,12 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
    npm run build
    ```
 
-2. **Configure environment**:
-   ```bash
-   export SEARCHSPRING_SITE_ID="your_site_id_here"
-   # Optional: export SEARCHSPRING_SECRET_KEY="your_secret_key" (for bulk indexing only)
-   ```
-
-3. **Start the server**:
+2. **Start the server**:
    ```bash
    npm start
    ```
+
+> **Note**: SEARCHSPRING_SITE_ID is optional - the LLM can provide example site IDs or ask users for their specific ID when needed.
 
 ## What This MCP Does
 
@@ -103,40 +99,74 @@ Output: ❌ Missing IntelliSuggest script, ⚠️ No safety check, 🔧 Troubles
 4. **Validation** → Use `searchspring_code_validator` to check your implementation
 5. **Troubleshooting** → Use validator with specific issues for detailed diagnosis
 
-## Testing
+## Testing & Development
 
-Test the MCP server:
+### Basic Validation
 ```bash
 npm test
 ```
 
-For interactive testing with MCP clients, see the MCP Client Integration section below.
+### Local Development with LLM Clients
 
-## Configuration Options
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SEARCHSPRING_SITE_ID` | ✅ Yes | Your Searchspring site identifier |
-| `SEARCHSPRING_SECRET_KEY` | ❌ No | Only needed for bulk indexing tools |
-| `SEARCHSPRING_TIMEOUT` | ❌ No | Request timeout in ms (default: 10000) |
-
-## MCP Client Integration
-
-### Claude Desktop
+#### Claude Desktop Integration
 Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
     "searchspring": {
       "command": "node",
-      "args": ["path/to/dist/index.js"],
-      "env": {
-        "SEARCHSPRING_SITE_ID": "your_site_id"
-      }
+      "args": ["/absolute/path/to/searchspring-api-mcp/dist/index.js"]
     }
   }
 }
 ```
+
+#### Testing with OpenAI/Other LLMs
+Use any MCP-compatible client:
+```bash
+# Start the MCP server
+npm start
+
+# Test with mcp-client or similar tools
+npx @modelcontextprotocol/inspector
+```
+
+#### Manual Tool Testing
+Test individual tools directly:
+```bash
+# Example: Test API guide tool
+echo '{"method": "tools/call", "params": {"name": "searchspring_api_guide", "arguments": {"api": "search"}}}' | npm start
+```
+
+### Interactive Development Testing
+
+1. **Start development server**:
+   ```bash
+   npm run dev
+   ```
+
+2. **Test API guidance**:
+   - Ask LLM: "Show me how to implement Searchspring search API"
+   - Ask LLM: "Generate Shopify tracking code for product views"
+   - Ask LLM: "Validate this search implementation code: [paste code]"
+
+3. **Test platform-specific generation**:
+   - Test all platforms: Shopify, BigCommerce, Magento1/2, Miva, CommerceV3, 3dCart, Volusion
+   - Test modern Shopify Web Pixel tracking scenarios
+   - Test bulk indexing guidance (with and without secret key)
+
+4. **Validate cross-references**:
+   - Ensure all generated code references match `docs.searchspring.com`
+   - Verify platform-specific template syntax (Liquid, Handlebars, PHP)
+   - Check that troubleshooting advice matches Zendesk Knowledge Base
+
+## Configuration Options
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SEARCHSPRING_SITE_ID` | ❌ Optional | Your Searchspring site identifier (LLM can provide examples) |
+| `SEARCHSPRING_SECRET_KEY` | ❌ Optional | Only needed for bulk indexing guidance |
+| `SEARCHSPRING_TIMEOUT` | ❌ Optional | Request timeout in ms (default: 10000) |
 
 ## Docker Deployment
 
@@ -146,11 +176,41 @@ Ready for production deployment with Docker:
 # Build the Docker image
 docker build -t searchspring-mcp .
 
-# Run with environment variables
+# Run without environment variables (LLM will handle site IDs)
+docker run searchspring-mcp
+
+# Or with optional environment variables
 docker run -e SEARCHSPRING_SITE_ID=your_site_id searchspring-mcp
 ```
 
 **Security Features**: Non-root user, minimal Alpine base, production-optimized
+
+### Kubernetes Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: searchspring-mcp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: searchspring-mcp
+  template:
+    metadata:
+      labels:
+        app: searchspring-mcp
+    spec:
+      containers:
+      - name: searchspring-mcp
+        image: searchspring-mcp:latest
+        ports:
+        - containerPort: 3000
+        # Environment variables are optional
+        env:
+        - name: SEARCHSPRING_TIMEOUT
+          value: "10000"
+```
 
 ## Common Use Cases
 
@@ -164,7 +224,6 @@ docker run -e SEARCHSPRING_SITE_ID=your_site_id searchspring-mcp
 
 - 📖 **Documentation**: https://docs.searchspring.com/
 - 🎯 **Help Center**: https://help.searchspring.net/
-- 🔧 **Implementation Guides**: https://help.searchspring.net/hc/en-us/sections/201185149
 
 ## License
 
