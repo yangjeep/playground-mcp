@@ -35,72 +35,67 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
 
 ## Available Tools
 
-### Implementation Guidance Tools
+### 🎯 Implementation Guidance
 
 | Tool | Input | Output |
 |------|-------|--------|
-| `searchspring_search` | Search parameters (query, filters, sort) | Complete API endpoint URL + JavaScript implementation example |
-| `searchspring_autocomplete` | Query string + options | Debounced autocomplete implementation with error handling |
-| `searchspring_suggest` | Query string + language | Spell correction API implementation + "Did you mean?" patterns |
-| `searchspring_trending` | Limit (default: 6) | Trending terms API implementation + UI integration examples |
-| `searchspring_recommendations` | Tags + personalization data | Recommendation API endpoint + implementation guidance |
+| `searchspring_api_guide` | API name | Complete implementation guide with endpoints, examples, and best practices |
+| `searchspring_parameter_guide` | API name + parameter | Detailed parameter explanation with usage examples and best practices |
 
-### Code Generation Tools
+**Supported APIs**: `search`, `autocomplete`, `suggest`, `trending`, `recommendations`, `finder`, `beacon`, `bulk-index`
 
-| Tool | Input | Output |
-|------|-------|--------|
-| `searchspring_platform_implementation` | Platform + event type + sample data | Ready-to-use tracking code for specific platforms |
-| `searchspring_search_result_click` | IntelliSuggest data + signature | JavaScript SDK implementation instructions |
-
-**Supported Platforms**: Shopify, BigCommerce, Magento 1/2, Miva, Commerce v3, 3DCart, Volusion, Custom
-
-### Validation & Troubleshooting Tools
+### 🔧 Code Generation & Validation
 
 | Tool | Input | Output |
 |------|-------|--------|
-| `searchspring_code_validator` | Code + type + platform + issue (optional) | ✅ Validation results, ⚠️ warnings, 💡 suggestions, 🔧 troubleshooting |
-| `searchspring_intellisuggest_track` | Event type + product data | Tracking implementation guidance |
-| `searchspring_beacon_track` | Event data + context | Analytics tracking implementation |
+| `searchspring_code_generator` | API + platform (+ eventType for tracking) | Platform-specific implementation code |
+| `searchspring_code_validator` | Code + codeType (+ platform + issue) | Validation results, warnings, suggestions, and troubleshooting |
 
-### Data Management Tools
-
-| Tool | Input | Output |
-|------|-------|--------|
-| `searchspring_bulk_index` | Feed ID + options | Bulk indexing API implementation guidance |
-| `searchspring_bulk_index_status` | None | Status check API implementation guidance |
-| `searchspring_finder` | Filters + facets | Product finder API implementation with faceting |
+**Supported Platforms**: `shopify`, `bigcommerce`, `magento2`, `javascript`, `php`, `python`, `custom`
+**Supported Code Types**: `search`, `autocomplete`, `suggest`, `trending`, `recommendations`, `finder`, `beacon`, `bulk-index`, `tracking`
 
 ## Example Usage
 
-### Get Search Implementation
+### Get API Implementation Guide
 ```json
-Input: {"query": "shoes", "filters": {"brand": ["Nike"]}}
-Output: Complete API URL + fetch() implementation + error handling
+// Get comprehensive guidance for any API
+Input: {"api": "search"}
+Output: Complete implementation guide with endpoints, examples, and best practices
 ```
 
-### Validate Tracking Code
+### Get Parameter Details
 ```json
+// Understand specific API parameters
+Input: {"api": "search", "parameter": "filters"}
+Output: Detailed explanation of filters parameter with examples and best practices
+```
+
+### Generate Platform Code
+```json
+// Generate platform-specific implementation
+Input: {"api": "beacon", "platform": "shopify", "eventType": "product"}
+Output: Ready-to-use Shopify tracking code with Liquid template syntax
+```
+
+### Validate Implementation
+```json
+// Validate existing code and get troubleshooting help
 Input: {
   "code": "<script>ss.track.product.view({sku: 'ABC'});</script>",
   "codeType": "tracking",
+  "platform": "shopify",
   "issue": "Events not showing in analytics"
 }
 Output: ❌ Missing IntelliSuggest script, ⚠️ No safety check, 🔧 Troubleshooting steps
 ```
 
-### Generate Platform Code
-```json
-Input: {"platform": "shopify", "eventType": "product", "sku": "DEMO-123"}
-Output: Liquid template code for Shopify product tracking
-```
-
 ## Integration Workflow
 
-1. **Planning** → Use search/autocomplete tools to understand API structure
-2. **Implementation** → Use platform-specific tools to generate tracking code
-3. **Validation** → Use code validator to check implementation
-4. **Troubleshooting** → Use validator with specific issues for diagnosis
-5. **Testing** → Use generated API URLs to test endpoints
+1. **Planning** → Use `searchspring_api_guide` to understand API structure and requirements
+2. **Deep Dive** → Use `searchspring_parameter_guide` for specific parameter details
+3. **Implementation** → Use `searchspring_code_generator` to create platform-specific code
+4. **Validation** → Use `searchspring_code_validator` to check your implementation
+5. **Troubleshooting** → Use validator with specific issues for detailed diagnosis
 
 ## Testing
 
