@@ -1170,7 +1170,13 @@ if (typeof ss != 'undefined') {
   {% endfor %}
 }
 </script>`,
-        sale: `<!-- Add to thank you page -->
+        sale: `<!-- IMPORTANT: Shopify Checkout Extensibility Notice -->
+<!-- For modern Shopify stores with checkout extensibility, sales tracking -->
+<!-- must be implemented via Shopify Web Pixel apps, not thank you page code -->
+<!-- See: https://help.searchspring.net/hc/en-us/articles/24882106349467 -->
+
+<!-- Traditional method (for older Shopify stores): -->
+<!-- Add to order-status-url (thank you page) template -->
 <script>
 if (typeof ss != 'undefined') {
   {% for line_item in order.line_items %}
@@ -1182,7 +1188,12 @@ if (typeof ss != 'undefined') {
   });
   {% endfor %}
 }
-</script>`
+</script>
+
+<!-- Modern Shopify (Checkout Extensibility) Method: -->
+<!-- This requires a Shopify Web Pixel app implementation -->
+<!-- Contact Searchspring support for Web Pixel app setup -->
+<!-- Web Pixel apps handle checkout-complete events automatically -->`
       },
       bigcommerce: {
         product: `<!-- Add to product page template (BigCommerce Stencil) -->
@@ -1455,6 +1466,12 @@ Requirements:
       if (code.includes("product.variants.first.sku") && !code.includes("product.selected_or_first_available_variant.sku")) {
         suggestions.push("💡 Consider using product.selected_or_first_available_variant.sku for better variant handling");
       }
+
+      // Check for modern Shopify checkout extensibility
+      if (codeType === "tracking" && code.includes("ss.track.purchase.buy") && code.includes("order.line_items")) {
+        warnings.push("⚠️  IMPORTANT: For Shopify stores with checkout extensibility, sales tracking must use Web Pixel apps instead of thank you page code");
+        suggestions.push("💡 Modern Shopify: Contact Searchspring support for Web Pixel app setup (https://help.searchspring.net/hc/en-us/articles/24882106349467)");
+      }
     }
 
     if (platform === "bigcommerce") {
@@ -1492,6 +1509,7 @@ Troubleshooting for: "${issue}"
 - Missing _isuid cookie (check browser dev tools > Application > Cookies)
 - SKU values don't match Searchspring indexed product SKU field
 - Browser console errors preventing script execution
+- SHOPIFY SPECIFIC: Modern Shopify stores with checkout extensibility require Web Pixel apps for sales tracking
 `;
       }
 
@@ -1500,6 +1518,16 @@ Troubleshooting for: "${issue}"
 - Ensure IntelliSuggest script loads before your tracking code
 - Remove async/defer attributes from the IntelliSuggest script tag
 - Check browser console for script loading errors
+`;
+      }
+
+      if (issue.toLowerCase().includes("shopify") && issue.toLowerCase().includes("sales")) {
+        troubleshooting += `Shopify sales tracking issues:
+- Modern Shopify (checkout extensibility): Use Web Pixel apps instead of thank you page
+- Traditional Shopify: Add code to order-status-url template
+- Contact Searchspring support for Web Pixel app setup
+- Verify _isuid cookie is being set correctly
+- Documentation: https://help.searchspring.net/hc/en-us/articles/24882106349467
 `;
       }
 
