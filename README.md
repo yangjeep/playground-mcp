@@ -4,6 +4,34 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
 
 > **Important**: This is an integration assistant, not an API proxy. It returns implementation guidance and code examples rather than live API data.
 
+## Quick Start for Claude Desktop
+
+1. **Install and build**:
+   ```bash
+   git clone <repo-url>
+   cd searchspring-api-mcp
+   npm install && npm run build
+   ```
+
+2. **Configure Claude Desktop** - Add to your `claude_desktop_config.json`:
+   ```json
+   {
+     "mcpServers": {
+       "searchspring": {
+         "command": "node",
+         "args": ["/absolute/path/to/searchspring-api-mcp/dist/index.js"]
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop** and ask:
+   ```
+   "Show me how to implement Searchspring search API"
+   ```
+
+The Searchspring tools will activate automatically - no special commands needed!
+
 ## Developer Setup
 
 1. **Install dependencies**:
@@ -138,6 +166,27 @@ Test individual tools directly:
 echo '{"method": "tools/call", "params": {"name": "searchspring_api_guide", "arguments": {"api": "search"}}}' | npm start
 ```
 
+### MCP Activation & Usage
+
+Once configured in Claude Desktop, the Searchspring MCP tools are **automatically available**. No special activation command needed!
+
+**Available Tools:**
+- `searchspring_api_guide` - Get implementation guidance for any API
+- `searchspring_parameter_guide` - Get detailed parameter explanations
+- `searchspring_code_generator` - Generate platform-specific code
+- `searchspring_code_validator` - Validate and troubleshoot existing code
+
+**Sample Prompts to Activate Tools:**
+
+```
+"Show me how to implement Searchspring search API"
+"Generate Shopify tracking code for product views"
+"Explain the filters parameter for the search API"
+"Validate this search implementation code: [paste code]"
+"Create BigCommerce autocomplete code"
+"How do I implement bulk indexing for Magento?"
+```
+
 ### Interactive Development Testing
 
 1. **Start development server**:
@@ -146,9 +195,9 @@ echo '{"method": "tools/call", "params": {"name": "searchspring_api_guide", "arg
    ```
 
 2. **Test API guidance**:
-   - Ask LLM: "Show me how to implement Searchspring search API"
-   - Ask LLM: "Generate Shopify tracking code for product views"
-   - Ask LLM: "Validate this search implementation code: [paste code]"
+   - Ask Claude: "Show me how to implement Searchspring search API"
+   - Ask Claude: "Generate Shopify tracking code for product views"
+   - Ask Claude: "Validate this search implementation code: [paste code]"
 
 3. **Test platform-specific generation**:
    - Test all platforms: Shopify, BigCommerce, Magento1/2, Miva, CommerceV3, 3dCart, Volusion
