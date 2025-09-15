@@ -26,10 +26,15 @@ A Model Context Protocol (MCP) server that provides **implementation guidance, c
 ## What This MCP Does
 
 ✅ **Implementation Guidance** - Step-by-step API integration instructions for all 8 Searchspring APIs
+
 ✅ **Code Validation** - Analyze existing implementations for issues with platform-specific checks
+
 ✅ **Platform-Specific Code** - Generate code for Shopify, BigCommerce, Magento, and 7+ platforms
+
 ✅ **Troubleshooting** - Diagnose common integration problems with targeted solutions
+
 ✅ **Modern Platform Support** - Includes Shopify checkout extensibility and Web Pixel guidance
+
 ✅ **Documentation Links** - Direct links to relevant Searchspring docs
 
 ❌ **Not an API Proxy** - Does not make live API calls or return product data
