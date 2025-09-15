@@ -6,14 +6,16 @@ import { SearchspringClient } from "../dist/searchspring-client.js";
 
 console.log("Testing Searchspring MCP Server...");
 
-// Test 1: Configuration validation with missing required fields
-console.log("\n1. Testing configuration validation (should fail with missing credentials):");
+// Test 1: Configuration validation without any environment variables
+console.log("\n1. Testing configuration validation (should pass without credentials):");
 try {
-  validateConfig();
-  console.log("❌ Config validation should have failed");
-  process.exit(1);
+  const config = validateConfig();
+  console.log("✅ Config validation passed without environment variables");
+  console.log("   - Site ID:", config.siteId || "undefined (LLM will handle)");
+  console.log("   - Timeout:", config.timeout);
 } catch (error) {
-  console.log("✅ Config validation correctly failed:", error.message.split('\n')[0]);
+  console.log("❌ Config validation failed:", error.message);
+  process.exit(1);
 }
 
 // Test 2: Configuration validation with provided credentials
@@ -45,6 +47,6 @@ try {
 }
 
 console.log("\n✅ All tests passed! Server is ready to use.");
-console.log("\nTo use the server, set your actual Searchspring credentials:");
-console.log("- SEARCHSPRING_SITE_ID=your_actual_site_id");
+console.log("\nOptional environment variables:");
+console.log("- SEARCHSPRING_SITE_ID=your_actual_site_id (LLM can provide examples)");
 console.log("- SEARCHSPRING_SECRET_KEY=your_secret_key (optional, for bulk indexing)");

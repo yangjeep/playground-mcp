@@ -1,149 +1,4 @@
-import axios, { AxiosInstance } from "axios";
 import { SearchspringConfig } from "./config.js";
-
-export interface SearchParams {
-  query?: string;
-  page?: number;
-  resultsPerPage?: number;
-  filters?: Record<string, string | string[]>;
-  bgfilters?: Record<string, string | string[]>;
-  sort?: Record<string, "asc" | "desc">;
-  userId?: string;
-  sessionId?: string;
-  pageLoadId?: string;
-  domain?: string;
-  redirectResponse?: "direct" | "minimal" | "full";
-  landingPage?: string;
-  tag?: string;
-  includedFacets?: string[];
-  excludedFacets?: string[];
-  disableInlineBanners?: boolean;
-  lastViewed?: string[];
-  cart?: string[];
-  shopper?: string;
-}
-
-export interface AutocompleteParams {
-  query?: string;
-  resultsPerPage?: number;
-  page?: number;
-  filters?: Record<string, string | string[]>;
-  bgfilters?: Record<string, string | string[]>;
-  sort?: Record<string, "asc" | "desc">;
-  userId?: string;
-  sessionId?: string;
-  pageLoadId?: string;
-  domain?: string;
-  redirectResponse?: "direct" | "minimal" | "full";
-  landingPage?: string;
-  tag?: string;
-  includedFacets?: string[];
-  excludedFacets?: string[];
-  disableInlineBanners?: boolean;
-  lastViewed?: string[];
-  cart?: string[];
-  shopper?: string;
-}
-
-export interface SuggestParams {
-  query?: string;
-  language?: string;
-  suggestionCount?: number;
-  productCount?: number;
-}
-
-export interface TrendingParams {
-  limit?: number;
-}
-
-export interface FinderParams {
-  resultsPerPage: number; // Must be 0 for finder
-  filters?: Record<string, string | string[]>;
-  bgfilters?: Record<string, string | string[]>;
-  includedFacets?: string[];
-  excludedFacets?: string[];
-}
-
-export interface RecommendationParams {
-  tags: string[];
-  products?: string[];
-  blockedItems?: string[];
-  categories?: string[];
-  brands?: string[];
-  shopper?: string;
-  cart?: string[];
-  lastViewed?: string[];
-  limits?: number[];
-  filters?: Record<string, string | string[]>;
-}
-
-export interface BeaconEventParams {
-  type: "profile.render" | "profile.impression" | "profile.click" | 
-        "profile.product.render" | "profile.product.impression" | "profile.product.click";
-  category: string;
-  id: string;
-  pid?: string;
-  event: {
-    profile?: {
-      tag: string;
-      placement: "product-page" | "home-page" | "no-results-page" | "confirmation-page" | 
-                 "basket-page" | "404-page" | "user-account-page" | "other";
-      seed?: Array<{ sku: string }>;
-    };
-    product?: {
-      id: string;
-      mappings?: {
-        core?: Record<string, any>;
-      };
-      seed?: Array<{ sku: string }>;
-    };
-    context?: {
-      type: string;
-      tag: string;
-      placement: string;
-    };
-  };
-  context: {
-    website: {
-      trackingCode: string;
-    };
-    userId: string;
-    sessionId: string;
-    pageLoadId?: string;
-  };
-}
-
-export interface BulkIndexParams {
-  feedId: number;
-  feedFile?: File;
-  requestedBy?: string;
-}
-
-export interface IntelliSuggestTrackingParams {
-  type: "product" | "cart" | "sale";
-  event: {
-    sku: string;
-    price?: number;
-    quantity?: number;
-    category?: string;
-    name?: string;
-    [key: string]: any;
-  };
-  context?: {
-    website?: {
-      trackingCode?: string;
-    };
-    userId?: string;
-    sessionId?: string;
-    pageLoadId?: string;
-  };
-}
-
-export interface SearchResultClickParams {
-  intellisuggestData: string;
-  intellisuggestSignature: string;
-  note?: string;
-}
 
 export interface PlatformImplementationParams {
   platform: "shopify" | "bigcommerce-blueprint" | "bigcommerce-stencil" | "magento1" | "magento2" | "miva" | "commercev3" | "3dcart" | "volusion" | "custom";
@@ -155,635 +10,1155 @@ export interface PlatformImplementationParams {
 
 export interface CodeValidationParams {
   code: string;
-  codeType: "tracking" | "search" | "autocomplete" | "recommendations";
-  platform?: "shopify" | "bigcommerce" | "magento2" | "custom" | "other";
+  codeType: "search" | "autocomplete" | "suggest" | "trending" | "recommendations" | "finder" | "beacon" | "bulk-index" | "tracking";
+  platform?: "shopify" | "bigcommerce" | "magento1" | "magento2" | "miva" | "commercev3" | "3dcart" | "volusion" | "custom" | "other";
   issue?: string;
 }
 
-function generateId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+export interface ApiGuideParams {
+  api: "search" | "autocomplete" | "suggest" | "trending" | "recommendations" | "finder" | "beacon" | "bulk-index";
+}
+
+export interface ParameterGuideParams {
+  api: "search" | "autocomplete" | "suggest" | "trending" | "recommendations" | "finder" | "beacon" | "bulk-index";
+  parameter: string;
+}
+
+export interface CodeGeneratorParams {
+  api: "search" | "autocomplete" | "suggest" | "trending" | "recommendations" | "finder" | "beacon" | "bulk-index" | "tracking";
+  platform: "shopify" | "bigcommerce" | "magento1" | "magento2" | "miva" | "commercev3" | "3dcart" | "volusion" | "javascript" | "php" | "python" | "custom";
+  eventType?: "product" | "cart" | "sale" | "search-click" | "impression";
+  useCase?: string;
 }
 
 export class SearchspringClient {
   private config: SearchspringConfig;
-  private searchClient: AxiosInstance;
-  private beaconClient: AxiosInstance;
-  private bulkIndexClient?: AxiosInstance;
 
   constructor(config: SearchspringConfig) {
     this.config = config;
-    
-    // Main search API client
-    this.searchClient = axios.create({
-      baseURL: `https://${config.siteId}.a.searchspring.io`,
-      timeout: config.timeout || 10000,
-      headers: {
-        "User-Agent": "Searchspring-MCP-Server/1.0.0",
+  }
+
+  private getSiteIdOrExample(): string {
+    return this.config.siteId || "xyz789";
+  }
+
+  private addSiteIdNote(text: string): string {
+    if (!this.config.siteId) {
+      return text + "\n\n**Note**: Replace 'xyz789' with your actual Searchspring site ID (also known as tracking code) in all URLs and code examples above. This is a 6-character alphanumeric identifier provided by your Searchspring representative.";
+    }
+    return text;
+  }
+
+  async getApiGuide(params: ApiGuideParams) {
+    const { api } = params;
+
+    const siteId = this.getSiteIdOrExample();
+
+    const apiGuides = {
+      search: {
+        name: "Search API",
+        description: "Full-text product search with filtering, sorting, and pagination",
+        endpoint: `https://${siteId}.a.searchspring.io/api/search/search.json`,
+        requiredParams: ["siteId", "resultsFormat", "userId", "sessionId", "pageLoadId", "domain"],
+        optionalParams: ["q", "page", "resultsPerPage", "filter.*", "bgfilter.*", "sort.*", "redirectResponse", "landingPage", "tag", "includedFacets", "excludedFacets", "disableInlineBanners", "lastViewed", "cart", "shopper"],
+        example: `fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsFormat=json&q=shoes&userId=user123&sessionId=session456&pageLoadId=page789&domain=https://yoursite.com')
+  .then(response => response.json())
+  .then(data => {
+    console.log('Total results:', data.pagination.totalResults);
+    data.results.forEach(product => {
+      console.log(product.title, product.price);
+    });
+  })
+  .catch(error => console.error('Search error:', error));`,
+        useCases: [
+          "Product catalog search",
+          "Category page filtering",
+          "Search results page",
+          "Faceted navigation"
+        ],
+        bestPractices: [
+          "Always include tracking parameters: userId (from ssUserId cookie), sessionId (from ssSessionIdNamespace cookie), pageLoadId (UUID v4), domain (window.location.href)",
+          "Use background filters (bgfilter.*) for permanent filtering, not filter.*",
+          "Implement proper error handling with .catch()",
+          "Use debouncing for real-time search (minimum 50ms for autocomplete)",
+          "Include pagination for large result sets",
+          "Use query parameter (q) for all search requests"
+        ]
       },
-    });
+      autocomplete: {
+        name: "Autocomplete API",
+        description: "Real-time product preview as user types - REQUIRED for autocomplete functionality (not Search API)",
+        endpoint: `https://${siteId}.a.searchspring.io/api/search/autocomplete.json`,
+        requiredParams: ["siteId", "resultsFormat", "userId", "sessionId", "pageLoadId", "domain"],
+        optionalParams: ["q", "resultsPerPage", "page", "filter.*", "bgfilter.*", "sort.*", "redirectResponse", "lastViewed", "cart", "shopper"],
+        example: `const searchInput = document.getElementById('search');
+let debounceTimer;
 
-    // Beacon tracking client
-    this.beaconClient = axios.create({
-      baseURL: "https://beacon.searchspring.io",
-      timeout: config.timeout || 10000,
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Searchspring-MCP-Server/1.0.0",
+searchInput.addEventListener('input', function(e) {
+  clearTimeout(debounceTimer);
+  const query = e.target.value;
+
+  if (query.length >= 2) {
+    debounceTimer = setTimeout(() => {
+      fetchAutocomplete(query);
+    }, 50); // 50ms debounce as recommended by Searchspring docs
+  }
+});
+
+function fetchAutocomplete(query) {
+  fetch('https://${siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId=user123&sessionId=session456&pageLoadId=page789&domain=https://yoursite.com')
+    .then(response => response.json())
+    .then(data => displaySuggestions(data))
+    .catch(error => console.error('Autocomplete error:', error));
+}`,
+        useCases: [
+          "Search input suggestions",
+          "Product finder autocomplete",
+          "Category autocomplete",
+          "Brand/attribute suggestions"
+        ],
+        bestPractices: [
+          "Use debouncing (300ms delay recommended)",
+          "Start suggesting after 2+ characters",
+          "Limit results to 8-10 suggestions",
+          "Handle keyboard navigation (up/down arrows)",
+          "Clear suggestions on blur or escape"
+        ]
       },
-    });
-
-    // Bulk indexing client (if secret key provided)
-    if (config.secretKey) {
-      this.bulkIndexClient = axios.create({
-        baseURL: "https://index-api.searchspring.net",
-        timeout: config.timeout || 30000,
-        auth: {
-          username: config.siteId,
-          password: config.secretKey,
-        },
-        headers: {
-          "User-Agent": "Searchspring-MCP-Server/1.0.0",
-        },
+      suggest: {
+        name: "Suggest API",
+        description: "Spell correction and alternative search term suggestions",
+        endpoint: `https://${siteId}.a.searchspring.io/api/suggest/query`,
+        requiredParams: ["siteId"],
+        optionalParams: ["q", "language", "suggestionCount", "productCount"],
+        example: `function getSuggestions(query) {
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/query?siteId=${siteId}&q=' + query + '&language=en&suggestionCount=4')
+    .then(response => response.json())
+    .then(data => {
+      if (data.spellCorrection && data.spellCorrection.corrected) {
+        showSpellCorrection(data.spellCorrection.corrected);
+      }
+      if (data.suggestions && data.suggestions.length > 0) {
+        showAlternativeSuggestions(data.suggestions);
+      }
+    })
+    .catch(error => console.error('Suggest error:', error));
+}`,
+        useCases: [
+          "Spell correction for misspelled queries",
+          "Alternative search suggestions",
+          "No results page suggestions",
+          "Query expansion"
+        ],
+        bestPractices: [
+          "Show spell corrections prominently",
+          "Limit suggestions to 3-5 alternatives",
+          "Use on no-results pages",
+          "Consider user's language/locale"
+        ]
+      },
+      trending: {
+        name: "Trending API",
+        description: "Popular search terms and trending content",
+        endpoint: `https://${siteId}.a.searchspring.io/api/suggest/trending`,
+        requiredParams: ["siteId"],
+        optionalParams: ["limit"],
+        example: `function loadTrendingTerms() {
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/trending?siteId=${siteId}&limit=6')
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById('trending-terms');
+      data.terms.forEach(term => {
+        const link = document.createElement('a');
+        link.href = '/search?q=' + encodeURIComponent(term.query);
+        link.textContent = term.query;
+        container.appendChild(link);
       });
+    })
+    .catch(error => console.error('Trending error:', error));
+}`,
+        useCases: [
+          "Homepage trending searches",
+          "No results page alternatives",
+          "Popular content widgets",
+          "Search inspiration"
+        ],
+        bestPractices: [
+          "Update trending terms regularly",
+          "Limit to 5-8 terms for better UX",
+          "Use on homepage and no-results pages",
+          "Make terms clickable for easy searching"
+        ]
+      },
+      recommendations: {
+        name: "Recommendations API",
+        description: "Personalized product recommendations",
+        endpoint: `https://${siteId}.a.searchspring.io/boost/${siteId}/recommend`,
+        requiredParams: ["tags"],
+        optionalParams: ["products", "blockedItems", "categories", "brands", "shopper", "cart", "lastViewed", "limits", "filter.*"],
+        example: `function getRecommendations() {
+  const params = new URLSearchParams({
+    tags: 'similar-products,trending',
+    products: 'PRODUCT-123',
+    limits: '5,10',
+    shopper: 'user123'
+  });
+
+  fetch('https://${siteId}.a.searchspring.io/boost/${siteId}/recommend?' + params)
+    .then(response => response.json())
+    .then(data => {
+      data.profiles.forEach(profile => {
+        console.log('Profile:', profile.tag);
+        profile.results.forEach(product => {
+          console.log(' -', product.title, product.price);
+        });
+      });
+    })
+    .catch(error => console.error('Recommendations error:', error));
+}`,
+        useCases: [
+          "Product page cross-sells",
+          "Homepage personalization",
+          "Cart page upsells",
+          "Related products"
+        ],
+        bestPractices: [
+          "Use multiple recommendation types (tags)",
+          "Include personalization data (shopper, cart, lastViewed)",
+          "Block out-of-stock or inappropriate items",
+          "Set reasonable limits per profile"
+        ]
+      },
+      finder: {
+        name: "Finder API",
+        description: "Faceted search for building product finder interfaces - uses Search API with resultsPerPage=0",
+        endpoint: `https://${siteId}.a.searchspring.io/api/search/search.json`,
+        requiredParams: ["siteId", "resultsPerPage=0"],
+        optionalParams: ["filter.*", "bgfilter.*", "includedFacets", "excludedFacets"],
+        example: `function getFacets() {
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsPerPage=0&filter.category=shoes')
+    .then(response => response.json())
+    .then(data => {
+      data.facets.forEach(facet => {
+        console.log('Facet:', facet.label);
+        facet.values.forEach(value => {
+          console.log(' -', value.label, '(' + value.count + ')');
+        });
+      });
+    })
+    .catch(error => console.error('Finder error:', error));
+}`,
+        useCases: [
+          "Product finder widgets",
+          "Advanced filtering interfaces",
+          "Category navigation",
+          "Faceted search"
+        ],
+        bestPractices: [
+          "Always set resultsPerPage=0 for facets-only",
+          "Use includedFacets to limit returned facets",
+          "Apply background filters for category pages",
+          "Show facet counts for better UX"
+        ]
+      },
+      beacon: {
+        name: "Beacon API",
+        description: "Advanced event tracking for Personalized Recommendations - NOTE: For basic product tracking use IntelliSuggest ss.track.* methods",
+        endpoint: `https://beacon.searchspring.io/api/event`,
+        requiredParams: ["array of event objects with: category, context, event, id, type"],
+        optionalParams: ["pid (for profile.product.* events)"],
+        example: `function trackEvent(eventType, eventData) {
+  const payload = {
+    type: eventType,
+    category: 'searchspring.recommendations.user-interactions',
+    siteId: '${siteId}',
+    id: 'event-' + Date.now(),
+    userid: 'user123',
+    sessionid: 'session456',
+    data: eventData,
+    context: {
+      website: { trackingCode: '${siteId}' },
+      page: { url: window.location.href }
     }
+  };
+
+  fetch('https://beacon.searchspring.io/api/event', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(response => response.json())
+  .then(data => console.log('Event tracked:', data))
+  .catch(error => console.error('Tracking error:', error));
+}`,
+        useCases: [
+          "Recommendation impression tracking",
+          "Click-through analytics",
+          "User behavior analytics",
+          "Custom event tracking"
+        ],
+        bestPractices: [
+          "Use consistent event categories",
+          "Include user and session identifiers",
+          "Batch events when possible",
+          "Handle tracking failures gracefully",
+          "Include relevant context data"
+        ]
+      },
+      "bulk-index": {
+        name: "Bulk Indexing API",
+        description: "Bulk product data indexing and management",
+        endpoint: `https://index-api.searchspring.net/api/index/feed`,
+        requiredParams: ["feedId"],
+        optionalParams: ["requestedBy"],
+        example: `// Platform-specific bulk indexing implementation
+// For cart platforms (Shopify, BigCommerce) - use PUT method
+function triggerCartPlatformIndex(feedId, secretKey) {
+  // Authentication via URL (siteId:secretKey@host)
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'PUT' // Downloads feed from cart platform
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Bulk index triggered successfully');
+    }
+  })
+  .catch(error => console.error('Bulk index error:', error));
+}
+
+// For custom feeds - use POST with file upload
+function uploadCustomFeed(feedId, secretKey, feedFile) {
+  const formData = new FormData();
+  formData.append('feedFile', feedFile);
+
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'POST',
+    body: formData // multipart/form-data
+  })
+  .then(response => response.json())
+  .then(data => console.log('Feed uploaded:', data))
+  .catch(error => console.error('Upload error:', error));
+}`,
+        useCases: [
+          "Product catalog updates",
+          "Inventory synchronization",
+          "Scheduled data imports",
+          "Content management integration"
+        ],
+        bestPractices: [
+          "Use PUT method for cart platforms (Shopify, BigCommerce, etc.)",
+          "Use POST method for custom feed uploads",
+          "Authentication: siteId:secretKey@ in URL (not headers)",
+          "Check status endpoint before triggering new index",
+          "Only one index per hour allowed",
+          "Use multipart/form-data for POST requests"
+        ]
+      }
+    };
+
+    const guide = apiGuides[api];
+    if (!guide) {
+      throw new Error(`Unknown API: ${api}`);
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: this.addSiteIdNote(`# ${guide.name} Implementation Guide
+
+## Overview
+${guide.description}
+
+**API Endpoint**: ${guide.endpoint}
+
+## Required Parameters
+${guide.requiredParams.map(param => `- \`${param}\``).join('\n')}
+
+## Optional Parameters
+${guide.optionalParams.map(param => `- \`${param}\``).join('\n')}
+
+## Implementation Example
+\`\`\`javascript
+${guide.example}
+\`\`\`
+
+## Common Use Cases
+${guide.useCases.map(useCase => `- ${useCase}`).join('\n')}
+
+## Best Practices
+${guide.bestPractices.map(practice => `- ${practice}`).join('\n')}
+
+## Documentation
+📖 **Full API Documentation**: https://docs.searchspring.com/api/${api}/
+🎯 **Help Center**: https://help.searchspring.net/
+🔧 **Implementation Guides**: https://help.searchspring.net/hc/en-us/sections/201185149`),
+        },
+      ],
+    };
   }
 
-  private buildSearchParams(params: SearchParams | AutocompleteParams): URLSearchParams {
-    const searchParams = new URLSearchParams();
-    searchParams.append("siteId", this.config.siteId);
-    searchParams.append("resultsFormat", "json");
-    searchParams.append("userId", params.userId!);
-    searchParams.append("sessionId", params.sessionId!);
-    searchParams.append("pageLoadId", params.pageLoadId!);
-    searchParams.append("domain", params.domain!);
+  async getParameterGuide(params: ParameterGuideParams) {
+    const { api, parameter } = params;
 
-    if ('query' in params && params.query) {
-      searchParams.append("q", params.query);
-    }
-
-    if (params.page) {
-      searchParams.append("page", params.page.toString());
-    }
-
-    if (params.resultsPerPage) {
-      searchParams.append("resultsPerPage", params.resultsPerPage.toString());
-    }
-
-    // Add filters with correct format
-    if (params.filters) {
-      Object.entries(params.filters).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(v => searchParams.append(`filter.${key}`, v));
-        } else {
-          searchParams.append(`filter.${key}`, value);
+    const parameterGuides: Record<string, Record<string, any>> = {
+      search: {
+        q: {
+          description: "Search query string - the terms users want to search for",
+          type: "string",
+          example: "running shoes",
+          bestPractices: [
+            "URL encode special characters",
+            "Trim whitespace before sending",
+            "Consider query preprocessing (stemming, synonyms)",
+            "Handle empty queries gracefully"
+          ],
+          useCases: ["Product search", "Site search", "Autocomplete"],
+          relatedParams: ["redirectResponse", "landingPage"]
+        },
+        filters: {
+          description: "Apply filters to search results using filter.{field}=value format",
+          type: "object",
+          example: "filter.brand=Nike&filter.color=blue&filter.price=50-100",
+          bestPractices: [
+            "Use exact field names from your product data",
+            "For multiple values: filter.brand=Nike&filter.brand=Adidas",
+            "For ranges: filter.price=min-max",
+            "URL encode filter values"
+          ],
+          useCases: ["Category filtering", "Faceted navigation", "Price filtering"],
+          relatedParams: ["bgfilters", "includedFacets", "excludedFacets"]
+        },
+        bgfilters: {
+          description: "Background filters applied permanently, not visible to users",
+          type: "object",
+          example: "bgfilter.status=active&bgfilter.visibility=public",
+          bestPractices: [
+            "Use for system-level filtering (active products, visible items)",
+            "Hide discontinued or out-of-stock products",
+            "Apply site-specific rules",
+            "Don't expose in filter UI"
+          ],
+          useCases: ["Product visibility", "Inventory filtering", "Site restrictions"],
+          relatedParams: ["filters"]
+        },
+        sort: {
+          description: "Sort search results by field and direction",
+          type: "object",
+          example: "sort.price=asc&sort.popularity=desc",
+          bestPractices: [
+            "Primary sort first, secondary sort second",
+            "Use 'asc' for ascending, 'desc' for descending",
+            "Common sorts: price, popularity, title, date",
+            "Provide sort options to users"
+          ],
+          useCases: ["Price sorting", "Popularity sorting", "Name sorting", "Date sorting"],
+          relatedParams: ["resultsPerPage", "page"]
+        },
+        userId: {
+          description: "Unique identifier for tracking user behavior - sourced from ssUserId cookie",
+          type: "string",
+          example: "value from ssUserId cookie",
+          bestPractices: [
+            "Always get value from ssUserId cookie",
+            "Automatically set by Searchspring tracking",
+            "Do not manually generate - use cookie value",
+            "Required for analytics and personalization"
+          ],
+          useCases: ["User tracking", "Personalization", "Analytics"],
+          relatedParams: ["sessionId", "pageLoadId", "domain"]
+        },
+        sessionId: {
+          description: "Session identifier for tracking user journey - sourced from ssSessionIdNamespace cookie",
+          type: "string",
+          example: "value from ssSessionIdNamespace cookie",
+          bestPractices: [
+            "Always get value from ssSessionIdNamespace cookie",
+            "Automatically set by Searchspring tracking",
+            "Do not manually generate - use cookie value",
+            "Used for analytics and behavior tracking"
+          ],
+          useCases: ["Session tracking", "User journey analysis", "Analytics"],
+          relatedParams: ["userId", "pageLoadId"]
+        },
+        pageLoadId: {
+          description: "Unique identifier for each page load/search - should be UUID v4",
+          type: "string",
+          example: "e560933a-b0fe-408d-8df5-807270e79fb8",
+          bestPractices: [
+            "Generate new UUID v4 for each page load",
+            "Update on every physical page load",
+            "For SPA/headless: update on URL route change",
+            "Critical for proper analytics tracking"
+          ],
+          useCases: ["Search tracking", "Click analytics", "Performance monitoring"],
+          relatedParams: ["userId", "sessionId", "domain"]
+        },
+        domain: {
+          description: "Current page URL - should be window.location.href",
+          type: "string",
+          example: "https://yoursite.com/search?q=shoes",
+          bestPractices: [
+            "Always use window.location.href value",
+            "Include full URL with protocol and parameters",
+            "Required for proper analytics and personalization",
+            "Do not hardcode - get dynamically"
+          ],
+          useCases: ["Page tracking", "Analytics", "Personalization context"],
+          relatedParams: ["userId", "sessionId", "pageLoadId"]
         }
-      });
-    }
-
-    // Add background filters
-    if (params.bgfilters) {
-      Object.entries(params.bgfilters).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(v => searchParams.append(`bgfilter.${key}`, v));
-        } else {
-          searchParams.append(`bgfilter.${key}`, value);
+      },
+      autocomplete: {
+        q: {
+          description: "Partial search query for autocomplete suggestions",
+          type: "string",
+          example: "runn (user typing 'running')",
+          bestPractices: [
+            "Start suggestions after 2+ characters",
+            "Use debouncing (50ms delay recommended by Searchspring)",
+            "Handle special characters properly",
+            "Clear suggestions when query is empty"
+          ],
+          useCases: ["Search input autocomplete", "Product suggestions", "Query completion"],
+          relatedParams: ["resultsPerPage"]
         }
-      });
+      },
+      recommendations: {
+        tags: {
+          description: "Recommendation profile tags/IDs that define recommendation types",
+          type: "array",
+          example: "['similar-products', 'trending', 'recently-viewed']",
+          bestPractices: [
+            "Use meaningful profile names",
+            "Configure profiles in Searchspring dashboard first",
+            "Combine multiple recommendation types",
+            "Order by priority/importance"
+          ],
+          useCases: ["Product recommendations", "Cross-selling", "Upselling", "Related products"],
+          relatedParams: ["limits", "products", "shopper"]
+        },
+        limits: {
+          description: "Maximum number of products per recommendation profile",
+          type: "array",
+          example: "[5, 10, 3] (corresponds to tags array order)",
+          bestPractices: [
+            "Match array length to tags array",
+            "Consider page layout constraints",
+            "Balance variety vs. performance",
+            "Typical limits: 4-12 products"
+          ],
+          useCases: ["Controlling recommendation quantity", "Layout optimization"],
+          relatedParams: ["tags"]
+        },
+        shopper: {
+          description: "Logged-in user identifier for personalization",
+          type: "string",
+          example: "user-12345",
+          bestPractices: [
+            "Use only for authenticated users",
+            "Consistent with your user system",
+            "Improves recommendation quality",
+            "Don't use for anonymous users"
+          ],
+          useCases: ["Personalized recommendations", "User-specific suggestions"],
+          relatedParams: ["cart", "lastViewed"]
+        }
+      },
+      beacon: {
+        type: {
+          description: "Event type identifier for analytics tracking",
+          type: "string",
+          example: "profile.impression, profile.click, custom.event",
+          bestPractices: [
+            "Use descriptive event names",
+            "Follow consistent naming conventions",
+            "Group related events with prefixes",
+            "Document custom event types"
+          ],
+          useCases: ["Event categorization", "Analytics filtering", "Reporting"],
+          relatedParams: ["category", "data"]
+        },
+        category: {
+          description: "Event category for grouping analytics events",
+          type: "string",
+          example: "searchspring.recommendations.user-interactions",
+          bestPractices: [
+            "Use Searchspring standard categories when possible",
+            "Create logical category hierarchies",
+            "Document custom categories",
+            "Keep category names consistent"
+          ],
+          useCases: ["Analytics grouping", "Event filtering", "Reporting dashboards"],
+          relatedParams: ["type", "data"]
+        },
+        data: {
+          description: "Event payload containing specific event data",
+          type: "object",
+          example: "{profile: {tag: 'similar-products'}, product: {id: 'SKU123'}}",
+          bestPractices: [
+            "Include relevant event context",
+            "Keep payload size reasonable",
+            "Use consistent data structure",
+            "Validate data before sending"
+          ],
+          useCases: ["Event details", "Analytics context", "Personalization data"],
+          relatedParams: ["type", "context"]
+        }
+      }
+    };
+
+    const apiParams = parameterGuides[api];
+    if (!apiParams) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Parameter guidance for ${api} API is not yet available. Use the searchspring_api_guide tool to get comprehensive API documentation.`,
+          },
+        ],
+      };
     }
 
-    // Add sort parameters
-    if (params.sort) {
-      Object.entries(params.sort).forEach(([key, direction]) => {
-        searchParams.append(`sort.${key}`, direction);
-      });
+    const paramGuide = apiParams[parameter];
+    if (!paramGuide) {
+      const availableParams = Object.keys(apiParams);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Parameter '${parameter}' not found for ${api} API.
+
+Available parameters for ${api}:
+${availableParams.map(p => `- ${p}`).join('\n')}
+
+Use one of these parameter names to get detailed guidance.`,
+          },
+        ],
+      };
     }
 
-    // Add optional parameters
-    if (params.redirectResponse) {
-      searchParams.append("redirectResponse", params.redirectResponse);
-    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: `# ${parameter} Parameter Guide (${api.toUpperCase()} API)
 
-    if (params.landingPage) {
-      searchParams.append("landing-page", params.landingPage);
-    }
+## Description
+${paramGuide.description}
 
-    if (params.tag) {
-      searchParams.append("tag", params.tag);
-    }
+**Type**: ${paramGuide.type}
 
-    if (params.includedFacets) {
-      params.includedFacets.forEach(facet => {
-        searchParams.append("includedFacets", facet);
-      });
-    }
+## Example Usage
+\`\`\`
+${paramGuide.example}
+\`\`\`
 
-    if (params.excludedFacets) {
-      params.excludedFacets.forEach(facet => {
-        searchParams.append("excludedFacets", facet);
-      });
-    }
+## Best Practices
+${paramGuide.bestPractices.map((practice: string) => `- ${practice}`).join('\n')}
 
-    if (params.disableInlineBanners) {
-      searchParams.append("disableInlineBanners", "true");
-    }
+## Common Use Cases
+${paramGuide.useCases.map((useCase: string) => `- ${useCase}`).join('\n')}
 
-    if (params.lastViewed) {
-      searchParams.append("lastViewed", params.lastViewed.join(","));
-    }
+## Related Parameters
+${paramGuide.relatedParams.map((param: string) => `- \`${param}\``).join('\n')}
 
-    if (params.cart) {
-      searchParams.append("cart", params.cart.join(","));
-    }
-
-    if (params.shopper) {
-      searchParams.append("shopper", params.shopper);
-    }
-
-    return searchParams;
+## Documentation
+📖 **API Documentation**: https://docs.searchspring.com/api/${api}/
+🎯 **Parameter Reference**: https://docs.searchspring.com/api/${api}/#parameters`,
+        },
+      ],
+    };
   }
 
-  async search(params: SearchParams) {
-    // Build the actual API URL for implementation guidance
-    const searchParams = this.buildSearchParams({
-      ...params,
-      userId: params.userId || "USER_ID_HERE",
-      sessionId: params.sessionId || "SESSION_ID_HERE",
-      pageLoadId: params.pageLoadId || "PAGE_LOAD_ID_HERE",
-      domain: params.domain || "https://your-site.com",
+  async generateCode(params: CodeGeneratorParams) {
+    const { api, platform, eventType, useCase } = params;
+
+    // For backward compatibility, handle "tracking" as legacy alias
+    const targetApi = api === "tracking" ? "beacon" : api;
+
+    if (targetApi === "beacon" && eventType) {
+      return this.generateTrackingCode(platform, eventType);
+    }
+
+    return this.generateApiCode(targetApi, platform, useCase);
+  }
+
+  private async generateApiCode(api: string, platform: string, useCase?: string) {
+    const siteId = this.getSiteIdOrExample();
+    // Generate implementation code for specific APIs
+    const codeTemplates: Record<string, Record<string, string>> = {
+      search: {
+        javascript: `// Search API implementation
+function searchProducts(query, filters = {}) {
+  const params = new URLSearchParams({
+    siteId: '${siteId}',
+    resultsFormat: 'json',
+    q: query,
+    userId: getUserId(),
+    sessionId: getSessionId(),
+    pageLoadId: getPageLoadId(),
+    domain: window.location.origin
+  });
+
+  // Add filters
+  Object.entries(filters).forEach(([key, value]) => {
+    params.append(\`filter.\${key}\`, value);
+  });
+
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?' + params)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Total results:', data.pagination.totalResults);
+      displaySearchResults(data.results);
+    })
+    .catch(error => console.error('Search error:', error));
+}`,
+        shopify: `<!-- Shopify search implementation -->
+<form action="/search" method="get">
+  <input type="text" name="q" placeholder="Search products..." />
+  <button type="submit">Search</button>
+</form>
+
+<script>
+// Enhanced search with Searchspring API
+document.querySelector('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const query = this.querySelector('input[name="q"]').value;
+
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}&domain={{ shop.permanent_domain }}')
+    .then(response => response.json())
+    .then(data => displayResults(data))
+    .catch(error => console.error('Search error:', error));
+});
+</script>`
+      },
+      autocomplete: {
+        javascript: `// Autocomplete implementation
+const searchInput = document.getElementById('search');
+let debounceTimer;
+
+searchInput.addEventListener('input', function(e) {
+  clearTimeout(debounceTimer);
+  const query = e.target.value;
+
+  if (query.length < 2) return;
+
+  debounceTimer = setTimeout(() => {
+    const params = new URLSearchParams({
+      siteId: '${siteId}',
+      resultsFormat: 'json',
+      q: query,
+      userId: getUserId(),
+      sessionId: getSessionId()
     });
 
-    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/search/search.json?${searchParams}`;
+    fetch('https://${siteId}.a.searchspring.io/api/search/autocomplete.json?' + params)
+      .then(response => response.json())
+      .then(data => displayAutocomplete(data.suggestions))
+      .catch(error => console.error('Autocomplete error:', error));
+  }, 300);
+});`,
+        shopify: `<!-- Shopify autocomplete implementation -->
+<div class="search-autocomplete">
+  <input type="text" id="search-input" placeholder="Search products..." />
+  <div id="autocomplete-results"></div>
+</div>
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Searchspring Search API Implementation Guide\n\n` +
-               `API Endpoint: ${apiUrl}\n\n` +
-               `Required Parameters:\n` +
-               `- siteId: ${this.config.siteId}\n` +
-               `- resultsFormat: json\n` +
-               `- userId: Unique user identifier\n` +
-               `- sessionId: Session identifier\n` +
-               `- pageLoadId: Page load identifier\n` +
-               `- domain: Your website domain\n\n` +
-               `Optional Parameters:\n` +
-               `- q: Search query ("${params.query || 'search terms'}")\n` +
-               `- page: Page number (${params.page || 1})\n` +
-               `- resultsPerPage: Results per page (${params.resultsPerPage || 24})\n` +
-               `- filter.{field}: Apply filters\n` +
-               `- sort.{field}: Sort direction (asc/desc)\n\n` +
-               `Example JavaScript Implementation:\n` +
-               `\`\`\`javascript\n` +
-               `fetch('${apiUrl}')\n` +
-               `  .then(response => response.json())\n` +
-               `  .then(data => {\n` +
-               `    // Handle search results\n` +
-               `    console.log(data.results);\n` +
-               `    // Update your UI with results\n` +
-               `  })\n` +
-               `  .catch(error => console.error('Search error:', error));\n` +
-               `\`\`\`\n\n` +
-               `Documentation: https://docs.searchspring.com/api/search/`,
-        },
-      ],
-    };
+<script>
+const searchInput = document.getElementById('search-input');
+const resultsDiv = document.getElementById('autocomplete-results');
+let debounceTimer;
+
+searchInput.addEventListener('input', function(e) {
+  clearTimeout(debounceTimer);
+  const query = e.target.value;
+
+  if (query.length < 2) {
+    resultsDiv.innerHTML = '';
+    return;
   }
 
-  async autocomplete(params: AutocompleteParams) {
-    // Build the actual API URL for implementation guidance
-    const searchParams = this.buildSearchParams({
-      ...params,
-      userId: params.userId || "USER_ID_HERE",
-      sessionId: params.sessionId || "SESSION_ID_HERE",
-      pageLoadId: params.pageLoadId || "PAGE_LOAD_ID_HERE",
-      domain: params.domain || "https://your-site.com",
+  debounceTimer = setTimeout(() => {
+    fetch('https://${siteId}.a.searchspring.io/api/search/autocomplete.json?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+      .then(response => response.json())
+      .then(data => {
+        resultsDiv.innerHTML = data.suggestions.map(s =>
+          '<div class="suggestion" onclick="selectSuggestion("' + s.text + '")">' + s.text + '</div>'
+        ).join('');
+      })
+      .catch(error => console.error('Autocomplete error:', error));
+  }, 300);
+});
+</script>`
+      },
+      suggest: {
+        javascript: `// Suggest API implementation
+function getSuggestions(query) {
+  const params = new URLSearchParams({
+    siteId: '${siteId}',
+    resultsFormat: 'json',
+    q: query,
+    userId: getUserId(),
+    sessionId: getSessionId()
+  });
+
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/query?' + params)
+    .then(response => response.json())
+    .then(data => {
+      if (data.suggested) {
+        console.log('Did you mean:', data.suggested);
+        displaySuggestion(data.suggested);
+      }
+    })
+    .catch(error => console.error('Suggest error:', error));
+}`,
+        shopify: `<!-- Shopify spell check implementation -->
+<script>
+function checkSpelling(query) {
+  fetch('https://${siteId}.a.searchspring.io/api/suggest/query?siteId=${siteId}&resultsFormat=json&q=' + query + '&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+    .then(response => response.json())
+    .then(data => {
+      if (data.suggested && data.suggested !== query) {
+        document.getElementById('suggestion').innerHTML =
+          'Did you mean: <a href="/search?q=' + data.suggested + '">' + data.suggested + '</a>?';
+      }
     });
+}
+</script>`
+      },
+      trending: {
+        javascript: `// Trending API implementation
+function getTrendingSearches() {
+  const params = new URLSearchParams({
+    siteId: '${siteId}',
+    resultsFormat: 'json',
+    userId: getUserId(),
+    sessionId: getSessionId()
+  });
 
-    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json?${searchParams}`;
+  fetch('https://${siteId}.a.searchspring.io/api/search/trending.json?' + params)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Trending searches:', data.trending);
+      displayTrendingSearches(data.trending);
+    })
+    .catch(error => console.error('Trending error:', error));
+}`,
+        shopify: `<!-- Shopify trending searches implementation -->
+<div class="trending-searches">
+  <h3>Trending Searches</h3>
+  <div id="trending-list"></div>
+</div>
+
+<script>
+fetch('https://${siteId}.a.searchspring.io/api/search/trending.json?siteId=${siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+  .then(response => response.json())
+  .then(data => {
+    const trendingList = document.getElementById('trending-list');
+    trendingList.innerHTML = data.trending.map(term =>
+      '<a href="/search?q=' + term + '" class="trending-term">' + term + '</a>'
+    ).join('');
+  })
+  .catch(error => console.error('Trending error:', error));
+</script>`
+      },
+      recommendations: {
+        javascript: `// Recommendations API implementation
+function getRecommendations(options = {}) {
+  const params = new URLSearchParams({
+    siteId: '${siteId}',
+    resultsFormat: 'json',
+    userId: getUserId(),
+    sessionId: getSessionId(),
+    pageLoadId: getPageLoadId(),
+    domain: window.location.origin,
+    ...options
+  });
+
+  fetch('https://${siteId}.a.searchspring.io/api/recommend/recommend.json?' + params)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Recommendations:', data.results);
+      displayRecommendations(data.results);
+    })
+    .catch(error => console.error('Recommendations error:', error));
+}`,
+        shopify: `<!-- Shopify recommendations implementation -->
+<div class="product-recommendations">
+  <h3>Recommended Products</h3>
+  <div id="recommendations-grid"></div>
+</div>
+
+<script>
+fetch('https://${siteId}.a.searchspring.io/api/recommend/recommend.json?siteId=${siteId}&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}&domain={{ shop.permanent_domain }}')
+  .then(response => response.json())
+  .then(data => {
+    const grid = document.getElementById('recommendations-grid');
+    grid.innerHTML = data.results.map(product =>
+      '<div class="product-card"><img src="' + product.imageUrl + '"><h4>' + product.name + '</h4><p>$' + product.price + '</p></div>'
+    ).join('');
+  })
+  .catch(error => console.error('Recommendations error:', error));
+</script>`
+      },
+      finder: {
+        javascript: `// Finder API implementation
+function buildProductFinder() {
+  const params = new URLSearchParams({
+    siteId: '${siteId}',
+    resultsFormat: 'json',
+    userId: getUserId(),
+    sessionId: getSessionId()
+  });
+
+  fetch('https://${siteId}.a.searchspring.io/api/search/search.json?resultsPerPage=0&' + params)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Finder facets:', data.facets);
+      buildFinderInterface(data.facets);
+    })
+    .catch(error => console.error('Finder error:', error));
+}`,
+        shopify: `<!-- Shopify product finder implementation -->
+<div class="product-finder">
+  <h3>Find Your Perfect Product</h3>
+  <div id="finder-facets"></div>
+  <div id="finder-results"></div>
+</div>
+
+<script>
+fetch('https://${siteId}.a.searchspring.io/api/search/search.json?siteId=${siteId}&resultsPerPage=0&resultsFormat=json&userId={{ customer.id | default: "anonymous" }}&sessionId={{ session.id }}')
+  .then(response => response.json())
+  .then(data => {
+    const facetsDiv = document.getElementById('finder-facets');
+    facetsDiv.innerHTML = data.facets.map(facet =>
+      '<div class="facet"><label>' + facet.label + '</label><select data-facet="' + facet.field + '">' +
+      facet.values.map(v => '<option value="' + v.value + '">' + v.label + '</option>').join('') +
+      '</select></div>'
+    ).join('');
+  })
+  .catch(error => console.error('Finder error:', error));
+</script>`
+      },
+      beacon: {
+        javascript: `// Beacon API for Personalized Recommendations tracking
+// NOTE: This is for recommendations beacon tracking, not basic product tracking
+// For basic IntelliSuggest tracking use ss.track.* methods instead
+
+function trackRecommendationEvent(events) {
+  // Events should be an array of event objects
+  fetch('https://beacon.searchspring.io/api/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(events)
+  })
+  .then(response => response.json())
+  .then(data => console.log('Recommendation events tracked:', data))
+  .catch(error => console.error('Beacon error:', error));
+}
+
+// Example: Track profile render event
+function trackProfileRender(profileId, tag, placement) {
+  const events = [{
+    category: "searchspring.recommendations.user-interactions",
+    context: {
+      pageLoadId: getPageLoadId(),
+      userId: getUserId(),
+      sessionId: getSessionId(),
+      website: { trackingCode: '${siteId}' }
+    },
+    event: {
+      context: { type: "product-recommendation", tag: tag, placement: placement },
+      profile: { tag: tag, placement: placement, seed: [""] }
+    },
+    id: profileId,
+    type: "profile.render"
+  }];
+  trackRecommendationEvent(events);
+}`,
+        shopify: `<!-- Shopify beacon tracking for Personalized Recommendations -->
+<!-- NOTE: For basic product tracking, use IntelliSuggest ss.track.* methods instead -->
+<script>
+function trackRecommendationEvents(events) {
+  fetch('https://beacon.searchspring.io/api/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(events)
+  })
+  .then(response => response.json())
+  .then(result => console.log('Recommendation events tracked:', result))
+  .catch(error => console.error('Beacon error:', error));
+}
+
+// Example: Track recommendation profile impression
+function trackProfileImpression(profileId, tag, placement) {
+  const events = [{
+    category: "searchspring.recommendations.user-interactions",
+    context: {
+      pageLoadId: generateUUID(),
+      userId: '{{ customer.id | default: "anonymous" }}',
+      sessionId: '{{ session.id }}',
+      website: { trackingCode: '${siteId}' }
+    },
+    event: {
+      context: { type: "product-recommendation", tag: tag, placement: placement },
+      profile: { tag: tag, placement: placement, seed: [""] }
+    },
+    id: profileId,
+    type: "profile.impression"
+  }];
+  trackRecommendationEvents(events);
+}
+</script>`
+      },
+      "bulk-index": {
+        javascript: `// Bulk Index API implementation
+// NOTE: Use PUT for cart platforms (Shopify, BigCommerce), POST for custom feeds
+
+// For cart platforms (Shopify, BigCommerce, etc.) - triggers feed download
+function triggerBulkIndex(feedId, secretKey) {
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'PUT'
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Bulk index triggered:', data);
+    if (data.success) {
+      console.log('Index successfully queued');
+      checkIndexStatus();
+    }
+  })
+  .catch(error => console.error('Bulk index error:', error));
+}
+
+// For custom feeds - uploads feed file
+function uploadCustomFeed(feedId, secretKey, feedFile) {
+  const formData = new FormData();
+  formData.append('feedFile', feedFile);
+
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Feed uploaded:', data);
+    if (data.success) {
+      console.log('Index successfully queued');
+    }
+  })
+  .catch(error => console.error('Feed upload error:', error));
+}`,
+        shopify: `<!-- Shopify Bulk Index implementation -->
+<!-- Use PUT method for cart platforms to trigger feed download -->
+<script>
+function triggerShopifyIndex(feedId, secretKey) {
+  const url = 'https://${siteId}:' + secretKey + '@index-api.searchspring.net/api/index/feed?feedId=' + feedId;
+
+  fetch(url, {
+    method: 'PUT'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Shopify feed index triggered successfully');
+    }
+  })
+  .catch(error => console.error('Shopify index error:', error));
+}
+</script>`,
+        php: `<?php
+// PHP Bulk Index API implementation
+// For cart platforms - use PUT to trigger feed download
+function triggerBulkIndex($feedId, $secretKey) {
+    $url = 'https://${siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode === 200) {
+        return json_decode($response, true);
+    } else {
+        throw new Exception('Bulk index failed with HTTP code: ' . $httpCode);
+    }
+}
+
+// For custom feeds - use POST with multipart/form-data
+function uploadCustomFeed($feedId, $secretKey, $feedFilePath) {
+    $url = 'https://${siteId}:' . $secretKey . '@index-api.searchspring.net/api/index/feed?feedId=' . $feedId;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        'feedFile' => new CURLFile($feedFilePath)
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    return json_decode($response, true);
+}
+?>`
+      }
+    };
+
+    const apiCode = codeTemplates[api]?.[platform] || codeTemplates[api]?.javascript;
+
+    if (!apiCode) {
+      return {
+        content: [{
+          type: "text",
+          text: `Code generation for ${api} API on ${platform} platform is not yet available. Use the searchspring_api_guide tool to get implementation guidance.`
+        }]
+      };
+    }
 
     return {
-      content: [
-        {
-          type: "text",
-          text: `Searchspring Autocomplete API Implementation Guide\n\n` +
-               `API Endpoint: ${apiUrl}\n\n` +
-               `Use Case: Real-time search suggestions as user types\n\n` +
-               `Implementation Example:\n` +
-               `\`\`\`javascript\n` +
-               `// Add to your search input field\n` +
-               `const searchInput = document.getElementById('search');\n` +
-               `let debounceTimer;\n\n` +
-               `searchInput.addEventListener('input', function(e) {\n` +
-               `  clearTimeout(debounceTimer);\n` +
-               `  const query = e.target.value;\n` +
-               `  \n` +
-               `  if (query.length >= 2) {\n` +
-               `    debounceTimer = setTimeout(() => {\n` +
-               `      fetchAutocomplete(query);\n` +
-               `    }, 300);\n` +
-               `  }\n` +
-               `});\n\n` +
-               `function fetchAutocomplete(query) {\n` +
-               `  const url = 'https://${this.config.siteId}.a.searchspring.io/api/search/autocomplete.json';\n` +
-               `  const params = new URLSearchParams({\n` +
-               `    siteId: '${this.config.siteId}',\n` +
-               `    resultsFormat: 'json',\n` +
-               `    q: query,\n` +
-               `    userId: getUserId(),\n` +
-               `    sessionId: getSessionId(),\n` +
-               `    pageLoadId: getPageLoadId(),\n` +
-               `    domain: window.location.origin\n` +
-               `  });\n` +
-               `  \n` +
-               `  fetch(url + '?' + params)\n` +
-               `    .then(response => response.json())\n` +
-               `    .then(data => displaySuggestions(data))\n` +
-               `    .catch(error => console.error('Autocomplete error:', error));\n` +
-               `}\n` +
-               `\`\`\`\n\n` +
-               `Documentation: https://docs.searchspring.com/api/autocomplete/`,
-        },
-      ],
+      content: [{
+        type: "text",
+        text: `# ${api.toUpperCase()} API Code for ${platform.toUpperCase()}
+
+${useCase ? `**Use Case**: ${useCase}\n\n` : ''}**Generated Implementation:**
+
+\`\`\`${platform === 'javascript' ? 'javascript' : 'html'}
+${apiCode}
+\`\`\`
+
+**Next Steps:**
+1. Customize the code for your specific needs
+2. Add error handling and user feedback
+3. Test the implementation thoroughly
+4. Use the code validator tool to check your implementation
+
+**Documentation**: https://docs.searchspring.com/api/${api}/`
+      }]
     };
   }
 
-  async suggest(params: SuggestParams) {
-    const searchParams = new URLSearchParams({
-      siteId: this.config.siteId,
-      q: params.query || "search term",
-      language: params.language || "en",
-      suggestionCount: (params.suggestionCount || 4).toString(),
-      productCount: (params.productCount || 20).toString(),
-    });
-
-    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/suggest/query?${searchParams}`;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Searchspring Suggest API Implementation Guide\n\n` +
-               `API Endpoint: ${apiUrl}\n\n` +
-               `Use Case: Spell correction and search term suggestions\n\n` +
-               `Key Features:\n` +
-               `- Spell correction for misspelled queries\n` +
-               `- Alternative search term suggestions\n` +
-               `- Language-specific correction models\n\n` +
-               `Implementation Example:\n` +
-               `\`\`\`javascript\n` +
-               `function getSuggestions(query) {\n` +
-               `  const url = 'https://${this.config.siteId}.a.searchspring.io/api/suggest/query';\n` +
-               `  const params = new URLSearchParams({\n` +
-               `    siteId: '${this.config.siteId}',\n` +
-               `    q: query,\n` +
-               `    language: 'en',\n` +
-               `    suggestionCount: '4',\n` +
-               `    productCount: '20'\n` +
-               `  });\n\n` +
-               `  fetch(url + '?' + params)\n` +
-               `    .then(response => response.json())\n` +
-               `    .then(data => {\n` +
-               `      if (data.spellCorrection && data.spellCorrection.corrected) {\n` +
-               `        // Show "Did you mean: {corrected}?"\n` +
-               `        showSpellCorrection(data.spellCorrection.corrected);\n` +
-               `      }\n` +
-               `      \n` +
-               `      if (data.suggestions && data.suggestions.length > 0) {\n` +
-               `        // Show alternative suggestions\n` +
-               `        showSuggestions(data.suggestions);\n` +
-               `      }\n` +
-               `    })\n` +
-               `    .catch(error => console.error('Suggest error:', error));\n` +
-               `}\n` +
-               `\`\`\`\n\n` +
-               `Documentation: https://docs.searchspring.com/api/suggest/`,
-        },
-      ],
-    };
-  }
-
-  async trending(params: TrendingParams) {
-    const searchParams = new URLSearchParams({
-      siteId: this.config.siteId,
-      limit: (params.limit || 6).toString(),
-    });
-
-    const apiUrl = `https://${this.config.siteId}.a.searchspring.io/api/suggest/trending?${searchParams}`;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Searchspring Trending API Implementation Guide\n\n` +
-               `API Endpoint: ${apiUrl}\n\n` +
-               `Use Case: Display trending search terms and popular queries\n\n` +
-               `Implementation Example:\n` +
-               `\`\`\`javascript\n` +
-               `function loadTrendingTerms() {\n` +
-               `  const url = 'https://${this.config.siteId}.a.searchspring.io/api/suggest/trending';\n` +
-               `  const params = new URLSearchParams({\n` +
-               `    siteId: '${this.config.siteId}',\n` +
-               `    limit: '${params.limit || 6}'\n` +
-               `  });\n\n` +
-               `  fetch(url + '?' + params)\n` +
-               `    .then(response => response.json())\n` +
-               `    .then(data => {\n` +
-               `      // Display trending terms\n` +
-               `      const trendingContainer = document.getElementById('trending-terms');\n` +
-               `      data.terms.forEach(term => {\n` +
-               `        const link = document.createElement('a');\n` +
-               `        link.href = '/search?q=' + encodeURIComponent(term.query);\n` +
-               `        link.textContent = term.query;\n` +
-               `        trendingContainer.appendChild(link);\n` +
-               `      });\n` +
-               `    })\n` +
-               `    .catch(error => console.error('Trending error:', error));\n` +
-               `}\n\n` +
-               `// Load trending terms on page load\n` +
-               `document.addEventListener('DOMContentLoaded', loadTrendingTerms);\n` +
-               `\`\`\`\n\n` +
-               `Common Use Cases:\n` +
-               `- Homepage trending search suggestions\n` +
-               `- No results page alternative queries\n` +
-               `- Search landing page popular terms\n\n` +
-               `Documentation: https://docs.searchspring.com/api/trending/`,
-        },
-      ],
-    };
-  }
-
-  async finder(params: FinderParams) {
-    try {
-      const searchParams = new URLSearchParams({
-        siteId: this.config.siteId,
-        resultsPerPage: "0", // Always 0 for finder
-      });
-
-      // Add filters
-      if (params.filters) {
-        Object.entries(params.filters).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            value.forEach(v => searchParams.append(`filter.${key}`, v));
-          } else {
-            searchParams.append(`filter.${key}`, value);
-          }
-        });
-      }
-
-      // Add background filters
-      if (params.bgfilters) {
-        Object.entries(params.bgfilters).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            value.forEach(v => searchParams.append(`bgfilter.${key}`, v));
-          } else {
-            searchParams.append(`bgfilter.${key}`, value);
-          }
-        });
-      }
-
-      if (params.includedFacets) {
-        params.includedFacets.forEach(facet => {
-          searchParams.append("includedFacets", facet);
-        });
-      }
-
-      if (params.excludedFacets) {
-        params.excludedFacets.forEach(facet => {
-          searchParams.append("excludedFacets", facet);
-        });
-      }
-
-      const response = await this.searchClient.get(`/api/search/finder.json?${searchParams}`);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Finder API results (facets only):\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Finder API error: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  async recommendations(params: RecommendationParams) {
-    try {
-      const searchParams = new URLSearchParams();
-
-      // Add tags (required)
-      searchParams.append("tags", params.tags.join(","));
-
-      if (params.products) {
-        searchParams.append("products", params.products.join(","));
-      }
-
-      if (params.blockedItems) {
-        searchParams.append("blockedItems", params.blockedItems.join(","));
-      }
-
-      if (params.categories) {
-        searchParams.append("categories", params.categories.join(","));
-      }
-
-      if (params.brands) {
-        searchParams.append("brands", params.brands.join(","));
-      }
-
-      if (params.shopper) {
-        searchParams.append("shopper", params.shopper);
-      }
-
-      if (params.cart) {
-        searchParams.append("cart", params.cart.join(","));
-      }
-
-      if (params.lastViewed) {
-        searchParams.append("lastViewed", params.lastViewed.join(","));
-      }
-
-      if (params.limits) {
-        searchParams.append("limits", params.limits.join(","));
-      }
-
-      // Add filters
-      if (params.filters) {
-        Object.entries(params.filters).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            value.forEach(v => searchParams.append(`filter.${key}`, v));
-          } else {
-            searchParams.append(`filter.${key}`, value);
-          }
-        });
-      }
-
-      const recClient = axios.create({
-        baseURL: `https://${this.config.siteId}.a.searchspring.io`,
-        timeout: this.config.timeout || 10000,
-        headers: {
-          "User-Agent": "Searchspring-MCP-Server/1.0.0",
-        },
-      });
-
-      const response = await recClient.get(`/boost/${this.config.siteId}/recommend?${searchParams}`);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Recommendations for tags [${params.tags.join(", ")}]:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Recommendations API error: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  async trackEvent(params: BeaconEventParams) {
-    try {
-      const response = await this.beaconClient.post("/beacon", params);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Beacon event tracked successfully: ${params.type}\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Beacon API error: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  async bulkIndex(params: BulkIndexParams) {
-    if (!this.bulkIndexClient) {
-      throw new Error("Bulk indexing requires SEARCHSPRING_SECRET_KEY to be configured");
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("feedId", params.feedId.toString());
-      
-      if (params.feedFile) {
-        formData.append("feedFile", params.feedFile);
-      }
-      
-      if (params.requestedBy) {
-        formData.append("requestedBy", params.requestedBy);
-      }
-
-      const method = params.feedFile ? "POST" : "PUT";
-      const config: any = {
-        method,
-        url: "/api/index/feed",
-      };
-      
-      if (method === "POST") {
-        config.data = formData;
-        config.headers = { "Content-Type": "multipart/form-data" };
-      } else {
-        config.params = { feedId: params.feedId, requestedBy: params.requestedBy };
-      }
-      
-      const response = await this.bulkIndexClient.request(config);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Bulk indexing ${method === "POST" ? "with file upload" : "trigger"} completed for feed ${params.feedId}:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Bulk indexing error: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  async getBulkIndexStatus() {
-    if (!this.bulkIndexClient) {
-      throw new Error("Bulk index status requires SEARCHSPRING_SECRET_KEY to be configured");
-    }
-
-    try {
-      const response = await this.bulkIndexClient.get("/api/index/status");
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Bulk indexing status:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Bulk index status error: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  async trackIntelliSuggestEvent(params: IntelliSuggestTrackingParams) {
-    try {
-      const eventPayload = {
-        type: params.type,
-        category: "searchspring.recommendations.user-interactions",
-        id: generateId(),
-        event: params.event,
-        context: {
-          website: {
-            trackingCode: params.context?.website?.trackingCode || this.config.siteId,
-          },
-          userId: params.context?.userId || generateId(),
-          sessionId: params.context?.sessionId || generateId(),
-          pageLoadId: params.context?.pageLoadId || generateId(),
-        },
-      };
-
-      const response = await this.beaconClient.post("/beacon", eventPayload);
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: `IntelliSuggest ${params.type} event tracked successfully:\n\n${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`IntelliSuggest tracking error: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  async trackSearchResultClick(params: SearchResultClickParams) {
-    // Note: This requires the IntelliSuggest JavaScript SDK to work properly
-    // The API cannot be called directly - this is for reference/documentation only
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Search result click tracking requires IntelliSuggest JavaScript SDK.\n\n` +
-               `IMPORTANT: Cannot be implemented via direct API calls.\n\n` +
-               `Required implementation:\n` +
-               `1. Include IntelliSuggest script: <script src="//cdn.searchspring.net/intellisuggest/is.min.js"></script>\n` +
-               `2. Use the JavaScript SDK to track clicks with these parameters:\n` +
-               `   - intellisuggestData: ${params.intellisuggestData}\n` +
-               `   - intellisuggestSignature: ${params.intellisuggestSignature}\n\n` +
-               `These values come from Search API response results.\n` +
-               `Documentation: https://help.searchspring.net/hc/en-us/articles/201185129-Adding-IntelliSuggest-Tracking#productclicks`,
-        },
-      ],
-    };
-  }
-
-  async getPlatformImplementation(params: PlatformImplementationParams) {
-    const { platform, eventType, sku = "PRODUCT_SKU", price = 99.99, quantity = 1 } = params;
+  private async generateTrackingCode(platform: string, eventType: string) {
+    const siteId = this.getSiteIdOrExample();
+    const sku = "PRODUCT_SKU";
+    const price = 99.99;
+    const quantity = 1;
 
     const implementations: Record<string, Record<string, string>> = {
       shopify: {
@@ -810,7 +1185,13 @@ if (typeof ss != 'undefined') {
   {% endfor %}
 }
 </script>`,
-        sale: `<!-- Add to thank you page -->
+        sale: `<!-- IMPORTANT: Shopify Checkout Extensibility Notice -->
+<!-- For modern Shopify stores with checkout extensibility, sales tracking -->
+<!-- must be implemented via Shopify Web Pixel apps, not thank you page code -->
+<!-- See: https://help.searchspring.net/hc/en-us/articles/24882106349467 -->
+
+<!-- Traditional method (for older Shopify stores): -->
+<!-- Add to order-status-url (thank you page) template -->
 <script>
 if (typeof ss != 'undefined') {
   {% for line_item in order.line_items %}
@@ -822,10 +1203,15 @@ if (typeof ss != 'undefined') {
   });
   {% endfor %}
 }
-</script>`
+</script>
+
+<!-- Modern Shopify (Checkout Extensibility) Method: -->
+<!-- This requires a Shopify Web Pixel app implementation -->
+<!-- Contact Searchspring support for Web Pixel app setup -->
+<!-- Web Pixel apps handle checkout-complete events automatically -->`
       },
-      "bigcommerce-stencil": {
-        product: `<!-- Add to product page template -->
+      bigcommerce: {
+        product: `<!-- Add to product page template (BigCommerce Stencil) -->
 <script>
 if (typeof ss != 'undefined') {
   ss.track.product.view({
@@ -835,7 +1221,7 @@ if (typeof ss != 'undefined') {
   });
 }
 </script>`,
-        cart: `<!-- Add to cart page -->
+        cart: `<!-- Add to cart page template -->
 <script>
 if (typeof ss != 'undefined') {
   {{#each cart.items}}
@@ -848,14 +1234,14 @@ if (typeof ss != 'undefined') {
   {{/each}}
 }
 </script>`,
-        sale: `<!-- Add to order confirmation -->
+        sale: `<!-- Add to order confirmation page -->
 <script>
 if (typeof ss != 'undefined') {
-  {{#each order.items}}
+  {{#each order.products}}
   ss.track.purchase.buy({
     sku: '{{sku}}',
     name: '{{name}}',
-    price: {{price.value}},
+    price: {{price_ex_tax}},
     quantity: {{quantity}}
   });
   {{/each}}
@@ -863,38 +1249,38 @@ if (typeof ss != 'undefined') {
 </script>`
       },
       magento2: {
-        product: `<!-- Add to catalog/product/view.phtml -->
+        product: `<!-- Add to product page template (Magento 2) -->
 <script>
 if (typeof ss != 'undefined') {
   ss.track.product.view({
-    sku: '<?= $product->getSku() ?>',
-    name: '<?= $product->getName() ?>',
-    price: <?= $product->getFinalPrice() ?>
+    sku: '<?= $block->escapeHtml($_product->getSku()) ?>',
+    name: '<?= $block->escapeHtml($_product->getName()) ?>',
+    price: <?= $_product->getFinalPrice() ?>
   });
 }
 </script>`,
-        cart: `<!-- Add to checkout/cart/index.phtml -->
+        cart: `<!-- Add to cart page template -->
 <script>
 if (typeof ss != 'undefined') {
-  <?php foreach ($cart->getAllVisibleItems() as $item): ?>
+  <?php foreach ($block->getItems() as $item): ?>
   ss.track.cart.add({
-    sku: '<?= $item->getSku() ?>',
-    name: '<?= $item->getName() ?>',
+    sku: '<?= $block->escapeHtml($item->getSku()) ?>',
+    name: '<?= $block->escapeHtml($item->getName()) ?>',
     price: <?= $item->getPrice() ?>,
     quantity: <?= $item->getQty() ?>
   });
   <?php endforeach; ?>
 }
 </script>`,
-        sale: `<!-- Add to checkout/success.phtml -->
+        sale: `<!-- Add to success page template -->
 <script>
 if (typeof ss != 'undefined') {
-  <?php foreach ($order->getAllVisibleItems() as $item): ?>
+  <?php foreach ($block->getOrderItems() as $item): ?>
   ss.track.purchase.buy({
-    sku: '<?= $item->getSku() ?>',
-    name: '<?= $item->getName() ?>',
+    sku: '<?= $block->escapeHtml($item->getSku()) ?>',
+    name: '<?= $block->escapeHtml($item->getName()) ?>',
     price: <?= $item->getPrice() ?>,
-    quantity: <?= (int)$item->getQtyOrdered() ?>
+    quantity: <?= $item->getQtyOrdered() ?>
   });
   <?php endforeach; ?>
 }
@@ -938,18 +1324,10 @@ if (typeof ss != 'undefined') {
     };
 
     const platformCode = implementations[platform] || implementations.custom;
-    const code = platformCode![eventType] || platformCode!.product;
+    const code = platformCode?.[eventType] || platformCode?.product || implementations.custom?.product || 'Code generation not available';
 
     const documentationUrls: Record<string, string> = {
       shopify: "https://help.searchspring.net/hc/en-us/articles/206972376-IntelliSuggest-Tracking-in-Shopify",
-      "bigcommerce-blueprint": "https://help.searchspring.net/hc/en-us/articles/115001480266",
-      "bigcommerce-stencil": "https://help.searchspring.net/hc/en-us/articles/360056186252",
-      magento1: "https://help.searchspring.net/hc/en-us/articles/201185069-IntelliSuggest-Tracking-in-Magento",
-      magento2: "https://github.com/searchspring/magento2-searchspring-tracking/",
-      miva: "https://help.searchspring.net/hc/en-us/articles/201185049-IntelliSuggest-Tracking-for-Miva-Merchant",
-      commercev3: "https://help.searchspring.net/hc/en-us/articles/201185179",
-      "3dcart": "https://help.searchspring.net/hc/en-us/articles/201185169-IntelliSuggest-Tracking-in-3dCart",
-      volusion: "https://help.searchspring.net/hc/en-us/articles/115001879966",
       custom: "https://help.searchspring.net/hc/en-us/articles/201185129-Adding-IntelliSuggest-Tracking"
     };
 
@@ -957,15 +1335,20 @@ if (typeof ss != 'undefined') {
       content: [
         {
           type: "text",
-          text: `IntelliSuggest Tracking Implementation for ${platform.toUpperCase()} - ${eventType} event:\n\n` +
-               `IMPORTANT: Include IntelliSuggest script first:\n` +
-               `<script src="//cdn.searchspring.net/intellisuggest/is.min.js"></script>\n\n` +
-               `Implementation Code:\n${code}\n\n` +
-               `Documentation: ${documentationUrls[platform]}\n\n` +
-               `Requirements:\n` +
-               `- _isuid cookie must be set\n` +
-               `- IntelliSuggest script must NOT have defer/async attributes\n` +
-               `- SKU values must match Searchspring indexed product SKU core field`,
+          text: `IntelliSuggest Tracking Implementation for ${platform.toUpperCase()} - ${eventType} event:
+
+IMPORTANT: Include IntelliSuggest script first:
+<script src="//cdn.searchspring.net/intellisuggest/is.min.js"></script>
+
+Implementation Code:
+${code}
+
+Documentation: ${documentationUrls[platform] || documentationUrls.custom}
+
+Requirements:
+- _isuid cookie must be set
+- IntelliSuggest script must NOT have defer/async attributes
+- SKU values must match Searchspring indexed product SKU core field`,
         },
       ],
     };
@@ -973,13 +1356,14 @@ if (typeof ss != 'undefined') {
 
   async validateCode(params: CodeValidationParams) {
     const { code, codeType, platform, issue } = params;
+    const siteId = this.getSiteIdOrExample();
 
     const validationResults: string[] = [];
     const warnings: string[] = [];
     const suggestions: string[] = [];
 
     // Common validation checks
-    if (codeType === "tracking") {
+    if (codeType === "tracking" || codeType === "beacon") {
       // Check for IntelliSuggest script inclusion
       if (!code.includes("cdn.searchspring.net/intellisuggest") && !code.includes("is.min.js")) {
         validationResults.push("❌ Missing IntelliSuggest script: <script src='//cdn.searchspring.net/intellisuggest/is.min.js'></script>");
@@ -1013,24 +1397,79 @@ if (typeof ss != 'undefined') {
       }
     }
 
-    if (codeType === "search" || codeType === "autocomplete") {
+    if (codeType === "search" || codeType === "autocomplete" || codeType === "suggest" || codeType === "trending" || codeType === "finder" || codeType === "recommendations") {
       // Check for API endpoint
       if (!code.includes(".a.searchspring.io")) {
         validationResults.push("❌ Missing Searchspring API endpoint (should include .a.searchspring.io)");
+      } else {
+        validationResults.push("✅ Searchspring API endpoint detected");
       }
 
       // Check for required parameters
       if (!code.includes("siteId")) {
         validationResults.push("❌ Missing required 'siteId' parameter");
+      } else {
+        validationResults.push("✅ siteId parameter detected");
       }
 
       if (!code.includes("userId") && !code.includes("sessionId")) {
         warnings.push("⚠️  Missing tracking parameters (userId, sessionId) - these are required for analytics");
       }
 
+      // API-specific validations
+      if (codeType === "search" && !code.includes("q=")) {
+        validationResults.push("❌ Search API missing query parameter 'q'");
+      }
+
+      if (codeType === "autocomplete" && !code.includes("debounce")) {
+        warnings.push("⚠️  Consider implementing debouncing for autocomplete to reduce API calls");
+      }
+
+      if (codeType === "recommendations" && !code.includes("pageLoadId")) {
+        warnings.push("⚠️  Recommendations work better with pageLoadId parameter");
+      }
+
       // Check for error handling
       if (!code.includes(".catch") && !code.includes("try")) {
         warnings.push("⚠️  No error handling detected - consider adding .catch() or try/catch");
+      }
+    }
+
+    if (codeType === "beacon") {
+      // Check for beacon endpoint
+      if (!code.includes("beacon.searchspring.io")) {
+        validationResults.push("❌ Missing Beacon API endpoint (should be beacon.searchspring.io)");
+      } else {
+        validationResults.push("✅ Beacon API endpoint detected");
+      }
+
+      // Check for POST method
+      if (!code.includes("POST")) {
+        validationResults.push("❌ Beacon API requires POST method");
+      }
+
+      // Check for required beacon fields
+      if (!code.includes("type")) {
+        validationResults.push("❌ Beacon tracking missing required 'type' field");
+      }
+    }
+
+    if (codeType === "bulk-index") {
+      // Check for bulk index endpoint
+      if (!code.includes("index-api.searchspring.net")) {
+        validationResults.push("❌ Missing Bulk Index API endpoint (should be index-api.searchspring.net)");
+      } else {
+        validationResults.push("✅ Bulk Index API endpoint detected");
+      }
+
+      // Check for secret key
+      if (!code.includes("secretKey")) {
+        validationResults.push("❌ Bulk Index API requires 'secretKey' parameter");
+      }
+
+      // Check for products array
+      if (!code.includes("products")) {
+        validationResults.push("❌ Bulk Index API missing 'products' array");
       }
     }
 
@@ -1043,53 +1482,90 @@ if (typeof ss != 'undefined') {
       if (code.includes("product.variants.first.sku") && !code.includes("product.selected_or_first_available_variant.sku")) {
         suggestions.push("💡 Consider using product.selected_or_first_available_variant.sku for better variant handling");
       }
+
+      // Check for modern Shopify checkout extensibility
+      if (codeType === "tracking" && code.includes("ss.track.purchase.buy") && code.includes("order.line_items")) {
+        warnings.push("⚠️  IMPORTANT: For Shopify stores with checkout extensibility, sales tracking must use Web Pixel apps instead of thank you page code");
+        suggestions.push("💡 Modern Shopify: Contact Searchspring support for Web Pixel app setup (https://help.searchspring.net/hc/en-us/articles/24882106349467)");
+      }
+    }
+
+    if (platform === "bigcommerce") {
+      if (codeType === "tracking" && !code.includes("{{#") && !code.includes("{{")) {
+        warnings.push("⚠️  No Handlebars template syntax detected - make sure you're using BigCommerce's Stencil template syntax");
+      }
+
+      if (code.includes("product.sku") && !code.includes("{{product.sku}}")) {
+        suggestions.push("💡 Use {{product.sku}} for BigCommerce Stencil template syntax");
+      }
     }
 
     if (platform === "magento2") {
       if (codeType === "tracking" && !code.includes("<?=")) {
         warnings.push("⚠️  No PHP template syntax detected - make sure you're using Magento's .phtml syntax");
       }
+
+      if (code.includes("$_product") && !code.includes("escapeHtml")) {
+        suggestions.push("💡 Use $block->escapeHtml() for proper data escaping in Magento 2");
+      }
     }
 
     // Issue-specific troubleshooting
     let troubleshooting = "";
     if (issue) {
-      troubleshooting = `\n\nTroubleshooting for: "${issue}"\n`;
+      troubleshooting = `
+
+Troubleshooting for: "${issue}"
+`;
 
       if (issue.toLowerCase().includes("not working") || issue.toLowerCase().includes("not tracking")) {
-        troubleshooting += `Common causes:\n` +
-                          `- IntelliSuggest script not loaded or blocked by ad blockers\n` +
-                          `- Script placed in wrong location (should be in <head> or before tracking calls)\n` +
-                          `- Missing _isuid cookie (check browser dev tools > Application > Cookies)\n` +
-                          `- SKU values don't match Searchspring indexed product SKU field\n` +
-                          `- Browser console errors preventing script execution\n`;
+        troubleshooting += `Common causes:
+- IntelliSuggest script not loaded or blocked by ad blockers
+- Script placed in wrong location (should be in <head> or before tracking calls)
+- Missing _isuid cookie (check browser dev tools > Application > Cookies)
+- SKU values don't match Searchspring indexed product SKU field
+- Browser console errors preventing script execution
+- SHOPIFY SPECIFIC: Modern Shopify stores with checkout extensibility require Web Pixel apps for sales tracking
+`;
       }
 
       if (issue.toLowerCase().includes("undefined") || issue.toLowerCase().includes("is not defined")) {
-        troubleshooting += `Script loading issue:\n` +
-                          `- Ensure IntelliSuggest script loads before your tracking code\n` +
-                          `- Remove async/defer attributes from the IntelliSuggest script tag\n` +
-                          `- Check browser console for script loading errors\n`;
+        troubleshooting += `Script loading issue:
+- Ensure IntelliSuggest script loads before your tracking code
+- Remove async/defer attributes from the IntelliSuggest script tag
+- Check browser console for script loading errors
+`;
+      }
+
+      if (issue.toLowerCase().includes("shopify") && issue.toLowerCase().includes("sales")) {
+        troubleshooting += `Shopify sales tracking issues:
+- Modern Shopify (checkout extensibility): Use Web Pixel apps instead of thank you page
+- Traditional Shopify: Add code to order-status-url template
+- Contact Searchspring support for Web Pixel app setup
+- Verify _isuid cookie is being set correctly
+- Documentation: https://help.searchspring.net/hc/en-us/articles/24882106349467
+`;
       }
 
       if (issue.toLowerCase().includes("search") || issue.toLowerCase().includes("results")) {
-        troubleshooting += `API integration issues:\n` +
-                          `- Verify siteId is correct: ${this.config.siteId}\n` +
-                          `- Check CORS settings if calling from browser\n` +
-                          `- Ensure all required parameters are included\n` +
-                          `- Check network tab for API response errors\n`;
+        troubleshooting += `API integration issues:
+- Verify siteId is correct: ${siteId}
+- Check CORS settings if calling from browser
+- Ensure all required parameters are included
+- Check network tab for API response errors
+`;
       }
     }
 
-    const summary = `Code Validation Results for ${codeType.toUpperCase()} implementation${platform ? ` on ${platform.toUpperCase()}` : ''}\n\n` +
-                   `${validationResults.join('\n')}\n\n` +
-                   (warnings.length > 0 ? `Warnings:\n${warnings.join('\n')}\n\n` : '') +
-                   (suggestions.length > 0 ? `Suggestions:\n${suggestions.join('\n')}\n\n` : '') +
-                   troubleshooting +
-                   `\nFor additional support:\n` +
-                   `- Documentation: https://docs.searchspring.com/\n` +
-                   `- Support: https://help.searchspring.net/\n` +
-                   `- Implementation guides: https://help.searchspring.net/hc/en-us/sections/201185149`;
+    const summary = `Code Validation Results for ${codeType.toUpperCase()} implementation${platform ? ` on ${platform.toUpperCase()}` : ''}
+
+${validationResults.join('\n')}
+
+${warnings.length > 0 ? `Warnings:\n${warnings.join('\n')}\n` : ''}${suggestions.length > 0 ? `Suggestions:\n${suggestions.join('\n')}\n` : ''}${troubleshooting}
+For additional support:
+- Documentation: https://docs.searchspring.com/
+- Support: https://help.searchspring.net/
+- Implementation guides: https://help.searchspring.net/hc/en-us/sections/201185149`;
 
     return {
       content: [
@@ -1099,16 +1575,5 @@ if (typeof ss != 'undefined') {
         },
       ],
     };
-  }
-
-  private getErrorMessage(error: any): string {
-    if (axios.isAxiosError(error)) {
-      if (error.response) {
-        return `HTTP ${error.response.status}: ${error.response.data?.message || error.response.statusText}`;
-      } else if (error.request) {
-        return "Network error: No response received";
-      }
-    }
-    return error.message || "Unknown error";
   }
 }

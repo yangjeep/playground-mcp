@@ -50,3 +50,12 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Documentation clone (external repo)
+docs.searchspring.com/
+
+# Downloaded documentation files
+*.mhtml
+
+# Claude settings
+.claude/

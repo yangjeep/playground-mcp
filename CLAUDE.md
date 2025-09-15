@@ -33,36 +33,22 @@ Project guidance for Claude Code when working with the Searchspring Integration 
 
 ## Available MCP Tools
 
-### Implementation Guidance Tools
+### 🎯 Implementation Guidance Tools
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `searchspring_search` | Search API guidance | Query + filters + sort | Complete API URL + JS implementation |
-| `searchspring_autocomplete` | Autocomplete guidance | Partial query | Debounced implementation + UI patterns |
-| `searchspring_suggest` | Spell correction guidance | Query + language | Correction API + "Did you mean?" UI |
-| `searchspring_trending` | Trending terms guidance | Limit | Trending API + homepage integration |
-| `searchspring_recommendations` | Recommendation guidance | Tags + context | Recommendation API + examples |
-| `searchspring_finder` | Faceted search guidance | Filters + facets | Finder API + dynamic filtering |
+| `searchspring_api_guide` | Complete API guidance | API name | Full implementation guide with endpoints, examples, best practices |
+| `searchspring_parameter_guide` | Parameter details | API name + parameter | Detailed parameter explanation with usage examples |
 
-### Code Generation Tools
+**Supported APIs**: `search`, `autocomplete`, `suggest`, `trending`, `recommendations`, `finder`, `beacon`, `bulk-index`
+
+### 🔧 Code Generation & Validation Tools
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
-| `searchspring_platform_implementation` | Platform-specific code | Platform + event type + data | Ready-to-use tracking code |
-| `searchspring_search_result_click` | Click tracking guidance | IntelliSuggest data | JavaScript SDK instructions |
+| `searchspring_code_generator` | Platform-specific code | API + platform (+ eventType for tracking) | Ready-to-use implementation code |
+| `searchspring_code_validator` | Code analysis | Code + codeType (+ platform + issue) | ✅ Validation, ⚠️ warnings, 💡 suggestions, 🔧 troubleshooting |
 
-**Supported Platforms**: Shopify, BigCommerce, Magento 1/2, Miva, Commerce v3, 3DCart, Volusion, Custom
-
-### Validation & Troubleshooting Tools
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `searchspring_code_validator` | Code analysis | Code + type + platform + issue | ✅ Validation, ⚠️ warnings, 💡 suggestions, 🔧 troubleshooting |
-| `searchspring_intellisuggest_track` | Tracking guidance | Event type + product data | Implementation guidance + context |
-| `searchspring_beacon_track` | Analytics guidance | Event + context | Beacon implementation guidance |
-
-### Data Management Tools
-| Tool | Purpose | Input | Output |
-|------|---------|-------|--------|
-| `searchspring_bulk_index` | Indexing guidance | Feed ID + options | Bulk API implementation guidance |
-| `searchspring_bulk_index_status` | Status check guidance | None | Status API implementation |
+**Supported Platforms**: `shopify`, `bigcommerce`, `magento1`, `magento2`, `miva`, `commercev3`, `3dcart`, `volusion`, `javascript`, `php`, `python`, `custom`
+**Supported Code Types**: `search`, `autocomplete`, `suggest`, `trending`, `recommendations`, `finder`, `beacon`, `bulk-index`, `tracking`
 
 ## Architecture
 
@@ -87,9 +73,10 @@ Project guidance for Claude Code when working with the Searchspring Integration 
 
 ### Tool Behavior
 - **All tools return implementation guidance**, not live API data
-- **Search tools** provide complete API URLs with parameters
-- **Platform tools** generate ready-to-use tracking code
-- **Validation tools** analyze code for issues and improvements
+- **API guide tool** provides complete implementation guidance for any Searchspring API
+- **Parameter guide tool** explains specific API parameters with examples and best practices
+- **Code generator tool** creates platform-specific implementation code
+- **Code validator tool** analyzes implementations for issues and improvements
 - **All tools** include documentation links and best practices
 
 ### Code Validation Features
@@ -113,10 +100,11 @@ All tools return:
 ## Usage Patterns
 
 ### For Customer Onboarding
-1. Use search/autocomplete tools to understand API structure
-2. Use platform implementation tools for tracking code
-3. Use code validator to ensure correctness
-4. Use troubleshooting for issue resolution
+1. Use `searchspring_api_guide` to understand API structure and requirements
+2. Use `searchspring_parameter_guide` for detailed parameter understanding
+3. Use `searchspring_code_generator` for platform-specific implementation
+4. Use `searchspring_code_validator` to ensure correctness
+5. **Special attention for Shopify**: Check for checkout extensibility requirements
 
 ### For Code Review
 1. Use code validator with existing implementation
@@ -130,10 +118,22 @@ All tools return:
 3. Validate fixes with code validator
 4. Test with generated API URLs
 
+## Docker Deployment
+
+**Production Ready**: Dockerfile included for Kubernetes/Docker deployment
+**Security**: Non-root user, minimal Alpine base, production optimizations
+**Environment**: Configurable via environment variables
+
+```bash
+docker build -t searchspring-mcp .
+docker run -e SEARCHSPRING_SITE_ID=your_site_id searchspring-mcp
+```
+
 ## Testing
 
 **Unit Tests**: `npm test` runs validation tests
 **MCP Integration**: Configure with Claude Desktop or other MCP clients for interactive testing
+**Platform Testing**: Cross-platform validation with template syntax checking
 
 ## Important Reminders
 
@@ -142,3 +142,9 @@ All tools return:
 3. **Provide complete examples** - Include error handling, best practices, and documentation
 4. **Platform-specific guidance** - Tailor responses to user's platform when specified
 5. **Validation is key** - Always validate implementations and provide improvement suggestions
+6. **Documentation Sources** - Implementation is cross-checked against:
+   - **docs.searchspring.com** (Official API documentation)
+   - **Searchspring Zendesk Knowledge Base** (Platform-specific guides)
+   - **Guru Knowledge Base** (Internal implementation details)
+7. **Modern Platform Requirements** - Include Shopify checkout extensibility and Web Pixel guidance
+8. **Production Ready** - Docker deployment support with security best practices
